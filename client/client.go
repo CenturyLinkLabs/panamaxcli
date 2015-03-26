@@ -31,7 +31,7 @@ func (p PanamaxAPI) GetApps() ([]App, error) {
 	}
 	defer resp.Body.Close()
 
-	apps := make([]App, 0)
+	var apps []App
 	decoder := json.NewDecoder(resp.Body)
 	if err := decoder.Decode(&apps); err != nil {
 		return nil, errors.New("error decoding JSON")
