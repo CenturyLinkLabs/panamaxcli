@@ -9,8 +9,10 @@ import (
 )
 
 type FakePanamax struct {
+	SearchTerms     string
 	ErrorForGetApps error
 	ErrorForGetApp  error
+	ErrorForSearch  error
 }
 
 func (p FakePanamax) GetApps() ([]client.App, error) {

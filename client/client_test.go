@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestImplementsPanamaxAPI(t *testing.T) {
+	assert.Implements(t, (*PanamaxClient)(nil), new(PanamaxAPI))
+}
+
 func TestGetApps(t *testing.T) {
 	m := http.NewServeMux()
 	s := httptest.NewServer(m)
@@ -16,29 +20,7 @@ func TestGetApps(t *testing.T) {
 
 	m.Handle("/apps", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
-
-		json := `[
-			{
-				"categories": [
-				{
-					"id": 1,
-					"name": "Web Tier",
-					"position": null
-				},
-				{
-					"id": 2,
-					"name": "DB Tier",
-					"position": null
-				}
-				],
-				"documentation": "Wordpress with MySQL\nFoo",
-				"errors": null,
-				"from": "Template: Wordpress with MySQL",
-				"id": 1,
-				"name": "Wordpress with MySQL"
-			}
-		]`
-		fmt.Fprintf(w, json)
+		fmt.Fprintf(w, appsJSON)
 	}))
 
 	p := PanamaxAPI{URL: s.URL}
@@ -79,27 +61,7 @@ func TestGetApp(t *testing.T) {
 
 	m.Handle("/apps/1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
-
-		json := `{
-				"categories": [
-				{
-					"id": 1,
-					"name": "Web Tier",
-					"position": null
-				},
-				{
-					"id": 2,
-					"name": "DB Tier",
-					"position": null
-				}
-				],
-				"documentation": "Wordpress with MySQL\nFoo",
-				"errors": null,
-				"from": "Template: Wordpress with MySQL",
-				"id": 1,
-				"name": "Wordpress with MySQL"
-		}`
-		fmt.Fprintf(w, json)
+		fmt.Fprintf(w, appJSON)
 	}))
 
 	p := PanamaxAPI{URL: s.URL}
@@ -121,4 +83,26 @@ func TestErroredRequestDoGet(t *testing.T) {
 	res, err := doGet(s.URL + "/apps")
 	assert.Empty(t, res)
 	assert.EqualError(t, err, "unexpected status '500 Internal Server Error'")
+}
+
+func TestSearchTemplates(t *testing.T) {
+	m := http.NewServeMux()
+	s := httptest.NewServer(m)
+	defer s.Close()
+
+	m.Handle("/search", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//\?search_result_set%5Bq%5D\=redis\&search_result_set%5Btype%5D\=template\&search_result_set%5Blimit%5D\=40
+		// TODO test terms and types and limit I guess?
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+
+		fmt.Fprintf(w, templateSearchJSON)
+	}))
+
+	p := PanamaxAPI{URL: s.URL}
+	templates, err := p.SearchTemplates("wordpress mysql")
+	assert.NoError(t, err)
+	if assert.Len(t, templates, 1) {
+		assert.Equal(t, 1, templates[0].ID)
+		assert.Equal(t, "Wordpress with MySQL", templates[0].Name)
+	}
 }

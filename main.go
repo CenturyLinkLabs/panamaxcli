@@ -29,15 +29,21 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name:        "run",
-			Usage:       "Run an application template",
-			Description: "Argument is an application template name.",
-			Action:      noopAction,
-		},
-		{
 			Name:   "status",
 			Usage:  "Get status for a running Panamax instance",
 			Action: noopAction,
+		},
+		{
+			Name:        "search",
+			Usage:       "Search for templates and images",
+			Description: "Argument is an search string.",
+			Action:      searchAction,
+		},
+		{
+			Name:        "run",
+			Usage:       "Run an application template",
+			Description: "Argument is an application template or image.",
+			Action:      noopAction,
 		},
 		{
 			Name:  "app",
@@ -87,6 +93,20 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func searchAction(c *cli.Context) {
+	p := client.PanamaxAPI{
+		URL: c.GlobalString("api-url"),
+	}
+
+	terms := c.Args()
+	output, err := actions.Search(p, terms)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf(output)
 }
 
 func appListAction(c *cli.Context) {

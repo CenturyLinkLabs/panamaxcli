@@ -11,8 +11,15 @@ import (
 type PanamaxClient interface {
 	GetApps() ([]App, error)
 	GetApp(id int) (App, error)
+	SearchTemplates(terms string) ([]Template, error)
 }
+
 type App struct {
+	ID   int
+	Name string
+}
+
+type Template struct {
 	ID   int
 	Name string
 }
@@ -47,6 +54,10 @@ func (p PanamaxAPI) GetApp(id int) (App, error) {
 		return App{}, err
 	}
 	return app, nil
+}
+
+func (p PanamaxAPI) SearchTemplates(terms string) ([]Template, error) {
+	return []Template{}, nil
 }
 
 func doGet(url string) ([]byte, error) {
