@@ -1,19 +1,13 @@
 package main // import "github.com/CenturyLinkLabs/panamaxcli"
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 
+	"github.com/CenturyLinkLabs/panamaxcli/actions"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
-
-type App struct {
-	ID   int
-	Name string
-}
 
 func main() {
 	app := cli.NewApp()
@@ -84,21 +78,13 @@ func main() {
 }
 
 func appListAction(c *cli.Context) {
-	resp, err := http.Get("http://coreos:3001/apps.json")
+	p := actions.PanamaxAPI{}
+	output, err := actions.ListApps(p)
 	if err != nil {
-		log.Fatalf("Error: %v", err.Error())
-	}
-	defer resp.Body.Close()
-
-	apps := make([]App, 0)
-	decoder := json.NewDecoder(resp.Body)
-	if err := decoder.Decode(&apps); err != nil {
-		log.Fatalf("Error: %v", err.Error())
+		log.Fatal(err)
 	}
 
-	for _, app := range apps {
-		fmt.Printf("App: %d, %s\n", app.ID, app.Name)
-	}
+	fmt.Printf(output)
 }
 
 func noopAction(c *cli.Context) {
