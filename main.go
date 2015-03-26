@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/CenturyLinkLabs/panamaxcli/actions"
+	"github.com/CenturyLinkLabs/panamaxcli/client"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -15,6 +16,16 @@ func main() {
 	app.Version = "0.0.1"
 	app.Usage = "Panamax command-line utility."
 	app.Authors = []cli.Author{{"CenturyLink Labs", "clt-labs-futuretech@centurylink.com"}}
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "api-url",
+			Value:  "http://localhost:3001",
+			Usage:  "The URL of the Panamax API server",
+			EnvVar: "PANAMAX_API_URL",
+		},
+	}
+
 	app.Commands = []cli.Command{
 		{
 			Name:        "run",
@@ -78,7 +89,9 @@ func main() {
 }
 
 func appListAction(c *cli.Context) {
-	p := actions.PanamaxAPI{}
+	p := client.PanamaxAPI{
+		URL: c.GlobalString("api-url"),
+	}
 	output, err := actions.ListApps(p)
 	if err != nil {
 		log.Fatal(err)
