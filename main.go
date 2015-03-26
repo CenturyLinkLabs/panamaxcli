@@ -46,13 +46,15 @@ func main() {
 					Name:        "describe",
 					Usage:       "Get details for a specific application",
 					Description: "Argument is an application ID.",
-					Action:      noopActionRequiringApp,
+					Before:      appRequired,
+					Action:      noopAction,
 				},
 				{
 					Name:        "logs",
 					Usage:       "View an application's logs",
 					Description: "Argument is an application ID.",
-					Action:      noopActionRequiringApp,
+					Before:      appRequired,
+					Action:      noopAction,
 				},
 			},
 		},
@@ -64,13 +66,15 @@ func main() {
 					Name:        "describe",
 					Usage:       "Get details for a specific service",
 					Description: "Argument is a service ID.",
-					Action:      noopActionRequiringService,
+					Before:      serviceRequired,
+					Action:      noopAction,
 				},
 				{
 					Name:        "logs",
 					Usage:       "View a service's logs",
 					Description: "Argument is a service ID.",
-					Action:      noopActionRequiringService,
+					Before:      serviceRequired,
+					Action:      noopAction,
 				},
 			},
 		},
@@ -101,22 +105,20 @@ func noopAction(c *cli.Context) {
 	fmt.Println("This command is unimplemented.")
 }
 
-func noopActionRequiringApp(c *cli.Context) {
+func appRequired(c *cli.Context) error {
 	appID := c.Args().First()
 	if appID == "" {
-		log.Fatal("An app is required!")
+		log.Fatal("A app is required!")
 	}
 
-	fmt.Println("AppID:", appID)
-	fmt.Println("This command is unimplemented.")
+	return nil
 }
 
-func noopActionRequiringService(c *cli.Context) {
+func serviceRequired(c *cli.Context) error {
 	serviceID := c.Args().First()
 	if serviceID == "" {
 		log.Fatal("A service is required!")
 	}
 
-	fmt.Println("ServiceID:", serviceID)
-	fmt.Println("This command is unimplemented.")
+	return nil
 }
