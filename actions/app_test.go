@@ -10,6 +10,7 @@ import (
 
 type FakePanamax struct {
 	ErrorForGetApps error
+	ErrorForGetApp  error
 }
 
 func (p FakePanamax) GetApps() ([]client.App, error) {
@@ -37,4 +38,28 @@ func TestErorredListApps(t *testing.T) {
 
 	assert.Equal(t, "", output)
 	assert.EqualError(t, err, "GetApps Error")
+}
+
+func (p FakePanamax) GetApp(id int) (client.App, error) {
+	if p.ErrorForGetApp != nil {
+		return client.App{}, p.ErrorForGetApp
+	}
+
+	return client.App{ID: 1, Name: "Test"}, nil
+}
+
+func TestDescribeApp(t *testing.T) {
+	output, err := DescribeApp(FakePanamax{}, 1)
+	assert.Contains(t, output, "App Details")
+	assert.Contains(t, output, "1")
+	assert.Contains(t, output, "Test")
+	assert.NoError(t, err)
+}
+
+func TestErroredDescribeApp(t *testing.T) {
+	err := errors.New("Test Error")
+	p := FakePanamax{ErrorForGetApp: err}
+	output, err := DescribeApp(p, 1)
+	assert.Equal(t, "", output)
+	assert.EqualError(t, err, "Test Error")
 }

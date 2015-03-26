@@ -3,6 +3,7 @@ package main // import "github.com/CenturyLinkLabs/panamaxcli"
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/CenturyLinkLabs/panamaxcli/actions"
 	"github.com/CenturyLinkLabs/panamaxcli/client"
@@ -52,7 +53,7 @@ func main() {
 					Usage:       "Get details for a specific application",
 					Description: "Argument is an application ID.",
 					Before:      appRequired,
-					Action:      noopAction,
+					Action:      appDescribeAction,
 				},
 				{
 					Name:        "logs",
@@ -100,6 +101,22 @@ func appListAction(c *cli.Context) {
 	fmt.Printf(output)
 }
 
+func appDescribeAction(c *cli.Context) {
+	p := client.PanamaxAPI{
+		URL: c.GlobalString("api-url"),
+	}
+	appID, err := strconv.Atoi(c.Args().First())
+	if err != nil {
+		log.Fatal(err)
+	}
+	output, err := actions.DescribeApp(p, appID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf(output)
+}
+
 func noopAction(c *cli.Context) {
 	fmt.Println("This command is unimplemented.")
 }
@@ -107,7 +124,7 @@ func noopAction(c *cli.Context) {
 func appRequired(c *cli.Context) error {
 	appID := c.Args().First()
 	if appID == "" {
-		log.Fatal("A app is required!")
+		log.Fatal("An app is required!")
 	}
 
 	return nil
