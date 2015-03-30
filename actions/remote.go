@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	"github.com/CenturyLinkLabs/panamaxcli/config"
 )
@@ -21,7 +22,8 @@ func AddRemote(config config.Config, name string, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err = config.Save(name, string(token)); err != nil {
+	trimmedToken := strings.TrimSpace(string(token))
+	if err = config.Save(name, trimmedToken); err != nil {
 		return "", err
 	}
 	return "Success!", nil

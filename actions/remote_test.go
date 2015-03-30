@@ -32,15 +32,15 @@ func (c *FakeConfig) Exists(name string) bool {
 	return false
 }
 
-func setupTokenFile(t *testing.T) string {
+func setupTokenFile(t *testing.T, data string) string {
 	tokenFile, err := ioutil.TempFile("", "pmx-test-token")
-	tokenFile.WriteString("token data")
+	tokenFile.WriteString(data)
 	assert.NoError(t, err)
 	return tokenFile.Name()
 }
 
 func TestAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t)
+	tokenFilePath := setupTokenFile(t, "token data")
 	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{}
 	output, err := AddRemote(&fc, "testname", tokenFilePath)
@@ -49,6 +49,16 @@ func TestAddRemote(t *testing.T) {
 	assert.Equal(t, "token data", fc.SavedToken)
 	assert.NoError(t, err)
 	assert.Equal(t, "Success!", output)
+}
+
+func TestStripsWhitespaceAddRemote(t *testing.T) {
+	tokenFilePath := setupTokenFile(t, "\n token data \n\n ")
+	defer os.Remove(tokenFilePath)
+	fc := FakeConfig{}
+	_, err := AddRemote(&fc, "testname", tokenFilePath)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "token data", fc.SavedToken)
 }
 
 func TestErroredExistingNameAddRemote(t *testing.T) {
@@ -80,7 +90,7 @@ func TestErroredMissingFileAddRemote(t *testing.T) {
 }
 
 func TestErroredConfigSaveAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t)
+	tokenFilePath := setupTokenFile(t, "token data")
 	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{ErrorForSave: errors.New("test error")}
 	output, err := AddRemote(&fc, "name", tokenFilePath)
