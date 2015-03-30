@@ -13,7 +13,10 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-var Commands []cli.Command
+var (
+	Config   config.Config
+	Commands []cli.Command
+)
 
 func init() {
 	Commands = []cli.Command{
@@ -91,8 +94,23 @@ func main() {
 	app.Usage = "Panamax command-line utility."
 	app.Authors = []cli.Author{{"CenturyLink Labs", "clt-labs-futuretech@centurylink.com"}}
 	app.Commands = Commands
+	app.Before = loadConfig
 
 	app.Run(os.Args)
+}
+
+func loadConfig(c *cli.Context) error {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	fileConfig := config.FileConfig{Path: dir + "/.agents"}
+	err := fileConfig.Load()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	Config = config.Config(&fileConfig)
+
+	return nil
 }
 
 func actionRequiresArgument(args ...string) func(c *cli.Context) error {
@@ -116,16 +134,7 @@ func remoteAddAction(c *cli.Context) {
 	name := c.Args().First()
 	path := c.Args().Get(1)
 
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	fileConfig := config.FileConfig{Path: dir + "/.agents"}
-	err := fileConfig.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-	config := config.Config(&fileConfig)
-
-	output, err := actions.AddRemote(config, name, path)
+	output, err := actions.AddRemote(Config, name, path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -134,16 +143,7 @@ func remoteAddAction(c *cli.Context) {
 }
 
 func remoteListAction(c *cli.Context) {
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	fileConfig := config.FileConfig{Path: dir + "/.agents"}
-	err := fileConfig.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-	config := config.Config(&fileConfig)
-
-	output := actions.ListRemotes(config)
+	output := actions.ListRemotes(Config)
 
 	fmt.Printf(output)
 }
