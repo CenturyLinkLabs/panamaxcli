@@ -24,7 +24,7 @@ func init() {
 				{
 					Name:   "list",
 					Usage:  "List remotes",
-					Action: noopAction,
+					Action: remoteListAction,
 				},
 				{
 					Name:        "add",
@@ -123,12 +123,27 @@ func remoteAddAction(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	config := config.Config(&fileConfig)
+
 	output, err := actions.AddRemote(config, name, path)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf(output)
+}
+
+func remoteListAction(c *cli.Context) {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	fileConfig := config.FileConfig{Path: dir + "/.agents"}
+	err := fileConfig.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	config := config.Config(&fileConfig)
+
+	output := actions.ListRemotes(config)
 
 	fmt.Printf(output)
 }

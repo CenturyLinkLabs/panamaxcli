@@ -9,11 +9,12 @@ import (
 type Config interface {
 	Save(name string, token string) error
 	Exists(name string) bool
+	Agents() []Agent
 }
 
 type FileConfig struct {
 	Path   string
-	Agents []Agent
+	agents []Agent
 }
 
 type Agent struct {
@@ -23,8 +24,8 @@ type Agent struct {
 
 func (c *FileConfig) Save(name string, token string) error {
 	a := Agent{name, token}
-	c.Agents = append(c.Agents, a)
-	b, err := json.MarshalIndent(c.Agents, "", "  ")
+	c.agents = append(c.Agents(), a)
+	b, err := json.MarshalIndent(c.Agents(), "", "  ")
 	if err != nil {
 		return err
 	}
@@ -33,7 +34,7 @@ func (c *FileConfig) Save(name string, token string) error {
 }
 
 func (c *FileConfig) Exists(name string) bool {
-	for _, a := range c.Agents {
+	for _, a := range c.Agents() {
 		if a.Name == name {
 			return true
 		}
@@ -52,9 +53,13 @@ func (c *FileConfig) Load() error {
 	}
 
 	d := json.NewDecoder(f)
-	if err := d.Decode(&c.Agents); err != nil {
+	if err := d.Decode(&c.agents); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c *FileConfig) Agents() []Agent {
+	return c.agents
 }

@@ -6,14 +6,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CenturyLinkLabs/panamaxcli/config"
 	"github.com/stretchr/testify/assert"
 )
 
 type FakeConfig struct {
-	ExistingNames []string
-	SavedName     string
-	SavedToken    string
-	ErrorForSave  error
+	agents       []config.Agent
+	SavedName    string
+	SavedToken   string
+	ErrorForSave error
 }
 
 func (c *FakeConfig) Save(name string, token string) error {
@@ -23,13 +24,17 @@ func (c *FakeConfig) Save(name string, token string) error {
 }
 
 func (c *FakeConfig) Exists(name string) bool {
-	for _, s := range c.ExistingNames {
-		if s == name {
+	for _, a := range c.agents {
+		if a.Name == name {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (c *FakeConfig) Agents() []config.Agent {
+	return c.agents
 }
 
 func setupTokenFile(t *testing.T, data string) string {
@@ -62,7 +67,7 @@ func TestStripsWhitespaceAddRemote(t *testing.T) {
 }
 
 func TestErroredExistingNameAddRemote(t *testing.T) {
-	fc := FakeConfig{ExistingNames: []string{"name"}}
+	fc := FakeConfig{agents: []config.Agent{{Name: "name"}}}
 	output, err := AddRemote(&fc, "name", "unused")
 
 	assert.Equal(t, "", output)
@@ -97,4 +102,16 @@ func TestErroredConfigSaveAddRemote(t *testing.T) {
 
 	assert.Equal(t, "", output)
 	assert.EqualError(t, err, "test error")
+}
+
+func TestListRemotes(t *testing.T) {
+	fc := FakeConfig{agents: []config.Agent{{Name: "Test"}}}
+	output := ListRemotes(&fc)
+	assert.Contains(t, output, "Test")
+}
+
+func TestListRemotesNoAgents(t *testing.T) {
+	fc := FakeConfig{}
+	output := ListRemotes(&fc)
+	assert.Contains(t, output, "No remotes")
 }

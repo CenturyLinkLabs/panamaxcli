@@ -28,3 +28,16 @@ func AddRemote(config config.Config, name string, path string) (string, error) {
 	}
 	return "Success!", nil
 }
+
+func ListRemotes(config config.Config) string {
+	agents := config.Agents()
+	if len(agents) == 0 {
+		return "No remotes"
+	}
+
+	var output string
+	for _, a := range config.Agents() {
+		output += a.Name + "\n"
+	}
+	return output
+}
