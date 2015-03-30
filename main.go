@@ -4,7 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/user"
+	"strings"
 
+	"github.com/CenturyLinkLabs/panamaxcli/actions"
+	"github.com/CenturyLinkLabs/panamaxcli/config"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -25,9 +29,9 @@ func init() {
 				{
 					Name:        "add",
 					Usage:       "Add a remote",
-					Description: "Argument is the path to a plain text file containing a token.",
-					Before:      actionRequiresArgument("file path"),
-					Action:      noopAction,
+					Description: "Arguments are the name of the remote and the path to the token file.",
+					Before:      actionRequiresArgument("remote name", "file path"),
+					Action:      remoteAddAction,
 				},
 				{
 					Name:        "active",
@@ -91,10 +95,11 @@ func main() {
 	app.Run(os.Args)
 }
 
-func actionRequiresArgument(name string) func(c *cli.Context) error {
+func actionRequiresArgument(args ...string) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		if c.Args().First() == "" {
-			message := fmt.Sprintf("This command requires a %s as an argument.", name)
+		if len(c.Args()) != len(args) {
+			s := strings.Join(args, ", ")
+			message := fmt.Sprintf("This command requires the following arguments: %s", s)
 			log.Errorln(message)
 			return errors.New(message)
 		}
@@ -105,4 +110,25 @@ func actionRequiresArgument(name string) func(c *cli.Context) error {
 
 func noopAction(c *cli.Context) {
 	fmt.Println("This command is not implemented.")
+}
+
+func remoteAddAction(c *cli.Context) {
+	name := c.Args().First()
+	path := c.Args().Get(1)
+
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	fileConfig := config.FileConfig{Path: dir + "/.agents"}
+	err := fileConfig.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config := config.Config(&fileConfig)
+	output, err := actions.AddRemote(config, name, path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf(output)
 }
