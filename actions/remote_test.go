@@ -11,7 +11,7 @@ import (
 )
 
 type FakeConfig struct {
-	agents              []config.Agent
+	Agents              []config.Agent
 	SavedName           string
 	SavedToken          string
 	ErrorForSave        error
@@ -27,7 +27,7 @@ func (c *FakeConfig) Save(name string, token string) error {
 }
 
 func (c *FakeConfig) Exists(name string) bool {
-	for _, a := range c.agents {
+	for _, a := range c.Agents {
 		if a.Name == name {
 			return true
 		}
@@ -37,7 +37,7 @@ func (c *FakeConfig) Exists(name string) bool {
 }
 
 func (c *FakeConfig) Remotes() []config.Agent {
-	return c.agents
+	return c.Agents
 }
 
 func (c *FakeConfig) SetActive(name string) error {
@@ -82,7 +82,7 @@ func TestStripsWhitespaceAddRemote(t *testing.T) {
 }
 
 func TestErroredExistingNameAddRemote(t *testing.T) {
-	fc := FakeConfig{agents: []config.Agent{{Name: "name"}}}
+	fc := FakeConfig{Agents: []config.Agent{{Name: "name"}}}
 	output, err := AddRemote(&fc, "name", "unused")
 
 	assert.Equal(t, "", output.ToPrettyOutput())
@@ -122,7 +122,7 @@ func TestErroredConfigSaveAddRemote(t *testing.T) {
 func TestListRemotes(t *testing.T) {
 	active := config.Agent{Name: "Active"}
 	fc := FakeConfig{
-		agents: []config.Agent{
+		Agents: []config.Agent{
 			{Name: "Test"},
 			active,
 		},
@@ -153,6 +153,27 @@ func TestSetActiveRemote(t *testing.T) {
 	assert.Equal(t, "Test", fc.ActivatedRemoteName)
 	assert.NoError(t, err)
 	assert.Equal(t, "Success!", output.ToPrettyOutput())
+}
+
+func TestDescribeRemote(t *testing.T) {
+	fc := FakeConfig{Agents: []config.Agent{{Name: "Test"}}}
+	output, err := DescribeRemote(&fc, "Test")
+
+	assert.NoError(t, err)
+	do, ok := output.(*DetailOutput)
+	if assert.True(t, ok) {
+		assert.Equal(t, "false", do.Details["Active"])
+		assert.Equal(t, "Test", do.Details["Name"])
+		// TODO need to actually include useful decoded things from the token here.
+	}
+}
+
+func TestErroredNonexistantDescribeRemote(t *testing.T) {
+	fc := FakeConfig{}
+	output, err := DescribeRemote(&fc, "Nonexistant")
+
+	assert.EqualError(t, err, "the remote 'Nonexistant' does not exist")
+	assert.Equal(t, "", output.ToPrettyOutput())
 }
 
 func TestErroredSetActiveRemote(t *testing.T) {

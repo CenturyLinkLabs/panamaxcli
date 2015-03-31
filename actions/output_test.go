@@ -18,3 +18,14 @@ func TestListOutput(t *testing.T) {
 	assert.Contains(t, s, "ID")
 	assert.Contains(t, s, "10")
 }
+
+func TestDetailOutput(t *testing.T) {
+	do := DetailOutput{
+		Details: map[string]string{
+			"Name": "Test Name",
+		},
+	}
+	s := do.ToPrettyOutput()
+
+	assert.Contains(t, s, "Name: Test Name")
+}

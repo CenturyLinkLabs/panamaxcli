@@ -1,6 +1,9 @@
 package actions
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Output interface {
 	ToPrettyOutput() string
@@ -37,4 +40,17 @@ type PlainOutput struct {
 
 func (o PlainOutput) ToPrettyOutput() string {
 	return o.Output
+}
+
+type DetailOutput struct {
+	Details map[string]string
+}
+
+func (o DetailOutput) ToPrettyOutput() string {
+	var output string
+	for k, v := range o.Details {
+		output += fmt.Sprintf("%s: %s\n", k, v)
+	}
+
+	return output
 }

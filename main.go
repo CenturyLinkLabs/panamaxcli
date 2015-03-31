@@ -30,6 +30,12 @@ func init() {
 					Action: remoteListAction,
 				},
 				{
+					Name:   "describe",
+					Usage:  "Describe a remote",
+					Before: actionRequiresArgument("remote name"),
+					Action: remoteDescribeAction,
+				},
+				{
 					Name:        "add",
 					Usage:       "Add a remote",
 					Description: "Arguments are the name of the remote and the path to the token file.",
@@ -144,6 +150,16 @@ func remoteAddAction(c *cli.Context) {
 
 func remoteListAction(c *cli.Context) {
 	output := actions.ListRemotes(Config)
+	fmt.Printf(output.ToPrettyOutput())
+}
+
+func remoteDescribeAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.DescribeRemote(Config, name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf(output.ToPrettyOutput())
 }
 

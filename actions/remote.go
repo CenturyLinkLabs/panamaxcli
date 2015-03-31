@@ -2,6 +2,7 @@ package actions
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -48,6 +49,33 @@ func ListRemotes(config config.Config) Output {
 		})
 	}
 	return &output
+}
+
+func DescribeRemote(c config.Config, name string) (Output, error) {
+	var remote config.Agent
+	for _, r := range c.Remotes() {
+		if r.Name == name {
+			remote = r
+			break
+		}
+	}
+	if remote.Name == "" {
+		return PlainOutput{}, fmt.Errorf("the remote '%s' does not exist", name)
+	}
+
+	isActive := "false"
+	if c.Active() != nil && c.Active().Name == remote.Name {
+		isActive = "true"
+	}
+
+	o := DetailOutput{
+		Details: map[string]string{
+			"Name":   remote.Name,
+			"Active": isActive,
+		},
+	}
+
+	return &o, nil
 }
 
 func SetActiveRemote(config config.Config, name string) (Output, error) {
