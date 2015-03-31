@@ -1,10 +1,13 @@
 package config
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type Config interface {
@@ -26,13 +29,21 @@ type Store struct {
 }
 
 type Remote struct {
-	Name  string
-	Token string
+	Name       string `json:"name"`
+	Token      string `json:"token"`
+	Endpoint   string `json:"endpoint"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	PrivateKey string `json:"private_key"`
 }
 
 func (c *FileConfig) Save(name string, token string) error {
-	a := Remote{name, token}
-	c.store.Remotes = append(c.Remotes(), a)
+	r := Remote{Name: name, Token: token}
+	if err := r.DecodeToken(); err != nil {
+		return err
+	}
+
+	c.store.Remotes = append(c.Remotes(), r)
 	return c.saveAll()
 }
 
@@ -97,4 +108,22 @@ func (c *FileConfig) saveAll() error {
 		return err
 	}
 	return ioutil.WriteFile(c.Path, b, 0600)
+}
+
+func (r *Remote) DecodeToken() error {
+	if r.Token == "" {
+		return errors.New("Missing token")
+	}
+	bs, err := base64.StdEncoding.DecodeString(r.Token)
+	if err != nil {
+		return err
+	}
+
+	data := strings.Split(string(bs), "|")
+	r.Endpoint = data[0]
+	r.Username = data[1]
+	r.Password = data[2]
+	r.PrivateKey = data[3]
+
+	return nil
 }

@@ -14,7 +14,7 @@ func TestConfigPersistence(t *testing.T) {
 	assert.NoError(t, err)
 
 	c := FileConfig{Path: dir + "/agent"}
-	err = c.Save("Test Agent", "Token Data")
+	err = c.Save("Test Agent", testToken)
 	assert.NoError(t, err)
 
 	// To make sure it *really* loaded...
@@ -22,10 +22,21 @@ func TestConfigPersistence(t *testing.T) {
 	err = c.Load()
 	assert.NoError(t, err)
 	if assert.Len(t, c.Remotes(), 1) {
-		a := c.Remotes()[0]
-		assert.Equal(t, "Test Agent", a.Name)
-		assert.Equal(t, "Token Data", a.Token)
+		r := c.Remotes()[0]
+		assert.Equal(t, "Test Agent", r.Name)
+		assert.Equal(t, testToken, r.Token)
+		assert.Equal(t, "https://45.55.152.201:3001", r.Endpoint)
 	}
+}
+
+func TestErroredBadTokenPersistence(t *testing.T) {
+	dir, err := ioutil.TempDir("", "agent-test")
+	defer os.RemoveAll(dir)
+	assert.NoError(t, err)
+
+	c := FileConfig{Path: dir + "/agent"}
+	err = c.Save("Test Agent", "BAD")
+	assert.Contains(t, err.Error(), "illegal base64 data")
 }
 
 func TestSuccessfulNonExistantLoad(t *testing.T) {
@@ -97,4 +108,26 @@ func TestConfigActive(t *testing.T) {
 
 	assert.NoError(t, c.SetActive("Test"))
 	assert.Equal(t, &agent, c.Active())
+}
+
+func TestRemoteDecodeToken(t *testing.T) {
+	remote := Remote{Token: testToken}
+	err := remote.DecodeToken()
+	assert.NoError(t, err)
+	assert.Equal(t, "https://45.55.152.201:3001", remote.Endpoint)
+	assert.Equal(t, "d55f5518-b56b-459a-aaa3-2ef7c9241bb7", remote.Username)
+	assert.Equal(t, "MmZhMmMyNWEtZmE4ZS00MGM4LWE3Y2ItYTAzNzhjMDVkYzY5Cg==", remote.Password)
+	assert.Contains(t, remote.PrivateKey, "BEGIN CERTIFICATE")
+}
+
+func TestErroredMissingTokenRemoteDecodeToken(t *testing.T) {
+	remote := Remote{Token: ""}
+	err := remote.DecodeToken()
+	assert.EqualError(t, err, "Missing token")
+}
+
+func TestErroredBadTokenRemoteDecodeToken(t *testing.T) {
+	remote := Remote{Token: "BAD"}
+	err := remote.DecodeToken()
+	assert.Contains(t, err.Error(), "illegal base64 data")
 }
