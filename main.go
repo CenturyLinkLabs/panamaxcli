@@ -38,10 +38,10 @@ func init() {
 				},
 				{
 					Name:        "active",
-					Usage:       "Set or get the active remote",
+					Usage:       "Set the active remote",
 					Description: "Passing a remote name as an argument makes it the active remote.",
 					Before:      actionRequiresArgument("remote name"),
-					Action:      noopAction,
+					Action:      setActiveRemoteAction,
 				},
 				{
 					Name:        "remove",
@@ -144,5 +144,15 @@ func remoteAddAction(c *cli.Context) {
 
 func remoteListAction(c *cli.Context) {
 	output := actions.ListRemotes(Config)
+	fmt.Printf(output.ToPrettyOutput())
+}
+
+func setActiveRemoteAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.SetActiveRemote(Config, name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf(output.ToPrettyOutput())
 }

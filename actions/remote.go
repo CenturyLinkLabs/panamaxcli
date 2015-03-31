@@ -30,16 +30,29 @@ func AddRemote(config config.Config, name string, path string) (Output, error) {
 }
 
 func ListRemotes(config config.Config) Output {
-	agents := config.Agents()
+	agents := config.Remotes()
 	if len(agents) == 0 {
 		return PlainOutput{"No remotes"}
 	}
 
-	output := ListOutput{Labels: []string{"Name"}}
-	for _, a := range config.Agents() {
+	output := ListOutput{Labels: []string{"Active", "Name"}}
+	for _, r := range config.Remotes() {
+		activeMarker := ""
+		if *config.Active() == r {
+			activeMarker = "*"
+		}
+
 		output.AddRow(map[string]string{
-			"Name": a.Name,
+			"Active": activeMarker,
+			"Name":   r.Name,
 		})
 	}
 	return &output
+}
+
+func SetActiveRemote(config config.Config, name string) (Output, error) {
+	if err := config.SetActive(name); err != nil {
+		return PlainOutput{}, err
+	}
+	return PlainOutput{"Success!"}, nil
 }

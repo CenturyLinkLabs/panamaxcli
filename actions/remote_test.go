@@ -11,10 +11,13 @@ import (
 )
 
 type FakeConfig struct {
-	agents       []config.Agent
-	SavedName    string
-	SavedToken   string
-	ErrorForSave error
+	agents              []config.Agent
+	SavedName           string
+	SavedToken          string
+	ErrorForSave        error
+	ActiveRemote        *config.Agent
+	ActivatedRemoteName string
+	ErrorForSetActive   error
 }
 
 func (c *FakeConfig) Save(name string, token string) error {
@@ -33,8 +36,20 @@ func (c *FakeConfig) Exists(name string) bool {
 	return false
 }
 
-func (c *FakeConfig) Agents() []config.Agent {
+func (c *FakeConfig) Remotes() []config.Agent {
 	return c.agents
+}
+
+func (c *FakeConfig) SetActive(name string) error {
+	c.ActivatedRemoteName = name
+	if c.ErrorForSetActive != nil {
+		return c.ErrorForSetActive
+	}
+	return nil
+}
+
+func (c *FakeConfig) Active() *config.Agent {
+	return c.ActiveRemote
 }
 
 func setupTokenFile(t *testing.T, data string) string {
@@ -105,17 +120,45 @@ func TestErroredConfigSaveAddRemote(t *testing.T) {
 }
 
 func TestListRemotes(t *testing.T) {
-	fc := FakeConfig{agents: []config.Agent{{Name: "Test"}}}
+	active := config.Agent{Name: "Active"}
+	fc := FakeConfig{
+		agents: []config.Agent{
+			{Name: "Test"},
+			active,
+		},
+		ActiveRemote: &active,
+	}
 	output := ListRemotes(&fc)
 
 	lo, ok := output.(*ListOutput)
-	if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
+	if assert.True(t, ok) && assert.Len(t, lo.Rows, 2) {
+		assert.Equal(t, "", lo.Rows[0]["Active"])
 		assert.Equal(t, "Test", lo.Rows[0]["Name"])
+
+		assert.Equal(t, "*", lo.Rows[1]["Active"])
+		assert.Equal(t, "Active", lo.Rows[1]["Name"])
 	}
 }
 
-func TestListRemotesNoAgents(t *testing.T) {
+func TestListRemotesNoRemotes(t *testing.T) {
 	fc := FakeConfig{}
 	output := ListRemotes(&fc)
 	assert.Equal(t, "No remotes", output.ToPrettyOutput())
+}
+
+func TestSetActiveRemote(t *testing.T) {
+	fc := FakeConfig{}
+	output, err := SetActiveRemote(&fc, "Test")
+
+	assert.Equal(t, "Test", fc.ActivatedRemoteName)
+	assert.NoError(t, err)
+	assert.Equal(t, "Success!", output.ToPrettyOutput())
+}
+
+func TestErroredSetActiveRemote(t *testing.T) {
+	fc := FakeConfig{ErrorForSetActive: errors.New("Name Not Found")}
+	output, err := SetActiveRemote(&fc, "Bad")
+
+	assert.Error(t, err)
+	assert.Equal(t, "", output.ToPrettyOutput())
 }
