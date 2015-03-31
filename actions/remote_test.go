@@ -53,7 +53,7 @@ func TestAddRemote(t *testing.T) {
 	assert.Equal(t, "testname", fc.SavedName)
 	assert.Equal(t, "token data", fc.SavedToken)
 	assert.NoError(t, err)
-	assert.Equal(t, "Success!", output)
+	assert.Equal(t, "Success!", output.ToPrettyOutput())
 }
 
 func TestStripsWhitespaceAddRemote(t *testing.T) {
@@ -70,14 +70,14 @@ func TestErroredExistingNameAddRemote(t *testing.T) {
 	fc := FakeConfig{agents: []config.Agent{{Name: "name"}}}
 	output, err := AddRemote(&fc, "name", "unused")
 
-	assert.Equal(t, "", output)
+	assert.Equal(t, "", output.ToPrettyOutput())
 	assert.EqualError(t, err, "Name already exists")
 }
 
 func TestErroredInvalidNameAddRemote(t *testing.T) {
 	fc := FakeConfig{}
 	output, err := AddRemote(&fc, "bad name", "unused")
-	assert.Equal(t, "", output)
+	assert.Equal(t, "", output.ToPrettyOutput())
 	assert.EqualError(t, err, "Invalid name")
 
 	_, err = AddRemote(&fc, "bad!", "unused")
@@ -90,7 +90,7 @@ func TestErroredInvalidNameAddRemote(t *testing.T) {
 func TestErroredMissingFileAddRemote(t *testing.T) {
 	fc := FakeConfig{}
 	output, err := AddRemote(&fc, "name", "bad/file")
-	assert.Equal(t, "", output)
+	assert.Equal(t, "", output.ToPrettyOutput())
 	assert.EqualError(t, err, "open bad/file: no such file or directory")
 }
 
@@ -100,18 +100,22 @@ func TestErroredConfigSaveAddRemote(t *testing.T) {
 	fc := FakeConfig{ErrorForSave: errors.New("test error")}
 	output, err := AddRemote(&fc, "name", tokenFilePath)
 
-	assert.Equal(t, "", output)
+	assert.Equal(t, "", output.ToPrettyOutput())
 	assert.EqualError(t, err, "test error")
 }
 
 func TestListRemotes(t *testing.T) {
 	fc := FakeConfig{agents: []config.Agent{{Name: "Test"}}}
 	output := ListRemotes(&fc)
-	assert.Contains(t, output, "Test")
+
+	lo, ok := output.(*ListOutput)
+	if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
+		assert.Equal(t, "Test", lo.Rows[0]["Name"])
+	}
 }
 
 func TestListRemotesNoAgents(t *testing.T) {
 	fc := FakeConfig{}
 	output := ListRemotes(&fc)
-	assert.Contains(t, output, "No remotes")
+	assert.Equal(t, "No remotes", output.ToPrettyOutput())
 }

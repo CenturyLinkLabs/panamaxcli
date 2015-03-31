@@ -11,33 +11,35 @@ import (
 
 var format = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
-func AddRemote(config config.Config, name string, path string) (string, error) {
+func AddRemote(config config.Config, name string, path string) (Output, error) {
 	if !format.MatchString(name) {
-		return "", errors.New("Invalid name")
+		return PlainOutput{}, errors.New("Invalid name")
 	}
 	if config.Exists(name) {
-		return "", errors.New("Name already exists")
+		return PlainOutput{}, errors.New("Name already exists")
 	}
 	token, err := ioutil.ReadFile(path)
 	if err != nil {
-		return "", err
+		return PlainOutput{}, err
 	}
 	trimmedToken := strings.TrimSpace(string(token))
 	if err = config.Save(name, trimmedToken); err != nil {
-		return "", err
+		return PlainOutput{}, err
 	}
-	return "Success!", nil
+	return PlainOutput{"Success!"}, nil
 }
 
-func ListRemotes(config config.Config) string {
+func ListRemotes(config config.Config) Output {
 	agents := config.Agents()
 	if len(agents) == 0 {
-		return "No remotes"
+		return PlainOutput{"No remotes"}
 	}
 
-	var output string
+	output := ListOutput{Labels: []string{"Name"}}
 	for _, a := range config.Agents() {
-		output += a.Name + "\n"
+		output.AddRow(map[string]string{
+			"Name": a.Name,
+		})
 	}
-	return output
+	return &output
 }

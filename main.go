@@ -139,11 +139,10 @@ func remoteAddAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output)
+	fmt.Printf(output.ToPrettyOutput())
 }
 
 func remoteListAction(c *cli.Context) {
 	output := actions.ListRemotes(Config)
-
-	fmt.Printf(output)
+	fmt.Printf(output.ToPrettyOutput())
 }
