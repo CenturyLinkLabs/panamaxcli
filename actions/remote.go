@@ -70,8 +70,9 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 
 	o := DetailOutput{
 		Details: map[string]string{
-			"Name":   remote.Name,
-			"Active": isActive,
+			"Name":     remote.Name,
+			"Active":   isActive,
+			"Endpoint": remote.Endpoint,
 		},
 	}
 

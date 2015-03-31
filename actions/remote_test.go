@@ -163,7 +163,8 @@ func TestSetActiveRemote(t *testing.T) {
 }
 
 func TestDescribeRemote(t *testing.T) {
-	fc := FakeConfig{Agents: []config.Remote{{Name: "Test"}}}
+	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
+	fc := FakeConfig{Agents: []config.Remote{r}}
 	output, err := DescribeRemote(&fc, "Test")
 
 	assert.NoError(t, err)
@@ -171,7 +172,7 @@ func TestDescribeRemote(t *testing.T) {
 	if assert.True(t, ok) {
 		assert.Equal(t, "false", do.Details["Active"])
 		assert.Equal(t, "Test", do.Details["Name"])
-		// TODO need to actually include useful decoded things from the token here.
+		assert.Equal(t, "http://example.com", do.Details["Endpoint"])
 	}
 }
 
