@@ -10,9 +10,9 @@ import (
 type Config interface {
 	Save(name string, token string) error
 	Exists(name string) bool
-	Remotes() []Agent
+	Remotes() []Remote
 	SetActive(name string) error
-	Active() *Agent
+	Active() *Remote
 }
 
 type FileConfig struct {
@@ -21,18 +21,18 @@ type FileConfig struct {
 }
 
 type Store struct {
-	Active string
-	Agents []Agent
+	Active  string   `json:"active"`
+	Remotes []Remote `json:"remotes"`
 }
 
-type Agent struct {
+type Remote struct {
 	Name  string
 	Token string
 }
 
 func (c *FileConfig) Save(name string, token string) error {
-	a := Agent{name, token}
-	c.store.Agents = append(c.Remotes(), a)
+	a := Remote{name, token}
+	c.store.Remotes = append(c.Remotes(), a)
 	return c.saveAll()
 }
 
@@ -54,7 +54,7 @@ func (c *FileConfig) SetActive(name string) error {
 	return nil
 }
 
-func (c *FileConfig) Active() *Agent {
+func (c *FileConfig) Active() *Remote {
 	activeName := c.store.Active
 	if activeName == "" {
 		return nil
@@ -87,8 +87,8 @@ func (c *FileConfig) Load() error {
 	return nil
 }
 
-func (c *FileConfig) Remotes() []Agent {
-	return c.store.Agents
+func (c *FileConfig) Remotes() []Remote {
+	return c.store.Remotes
 }
 
 func (c *FileConfig) saveAll() error {

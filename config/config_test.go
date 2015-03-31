@@ -52,13 +52,13 @@ func TestErroredBadFormatLoad(t *testing.T) {
 }
 
 func TestConfigExists(t *testing.T) {
-	c := FileConfig{store: Store{Agents: []Agent{{Name: "Test"}}}}
+	c := FileConfig{store: Store{Remotes: []Remote{{Name: "Test"}}}}
 	assert.True(t, c.Exists("Test"))
 	assert.False(t, c.Exists("BadName"))
 }
 
-func TestConfigAgents(t *testing.T) {
-	c := FileConfig{store: Store{Agents: []Agent{{Name: "Test"}}}}
+func TestConfigRemotes(t *testing.T) {
+	c := FileConfig{store: Store{Remotes: []Remote{{Name: "Test"}}}}
 	if assert.Len(t, c.Remotes(), 1) {
 		assert.Equal(t, "Test", c.Remotes()[0].Name)
 	}
@@ -72,8 +72,8 @@ func TestConfigSetActive(t *testing.T) {
 	c := FileConfig{
 		Path: dir + "/agent",
 		store: Store{
-			Active: "Test",
-			Agents: []Agent{{Name: "Test"}, {Name: "Test2"}},
+			Active:  "Test",
+			Remotes: []Remote{{Name: "Test"}, {Name: "Test2"}},
 		},
 	}
 	assert.NoError(t, c.SetActive("Test2"))
@@ -91,8 +91,8 @@ func TestErroredNonexistantRemoteConfigSetActive(t *testing.T) {
 }
 
 func TestConfigActive(t *testing.T) {
-	agent := Agent{Name: "Test"}
-	c := FileConfig{store: Store{Agents: []Agent{agent}}}
+	agent := Remote{Name: "Test"}
+	c := FileConfig{store: Store{Remotes: []Remote{agent}}}
 	assert.Nil(t, c.Active())
 
 	assert.NoError(t, c.SetActive("Test"))

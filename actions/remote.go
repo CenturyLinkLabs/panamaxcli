@@ -52,7 +52,7 @@ func ListRemotes(config config.Config) Output {
 }
 
 func DescribeRemote(c config.Config, name string) (Output, error) {
-	var remote config.Agent
+	var remote config.Remote
 	for _, r := range c.Remotes() {
 		if r.Name == name {
 			remote = r

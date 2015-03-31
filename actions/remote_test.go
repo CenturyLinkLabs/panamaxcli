@@ -11,11 +11,11 @@ import (
 )
 
 type FakeConfig struct {
-	Agents              []config.Agent
+	Agents              []config.Remote
 	SavedName           string
 	SavedToken          string
 	ErrorForSave        error
-	ActiveRemote        *config.Agent
+	ActiveRemote        *config.Remote
 	ActivatedRemoteName string
 	ErrorForSetActive   error
 }
@@ -36,7 +36,7 @@ func (c *FakeConfig) Exists(name string) bool {
 	return false
 }
 
-func (c *FakeConfig) Remotes() []config.Agent {
+func (c *FakeConfig) Remotes() []config.Remote {
 	return c.Agents
 }
 
@@ -48,7 +48,7 @@ func (c *FakeConfig) SetActive(name string) error {
 	return nil
 }
 
-func (c *FakeConfig) Active() *config.Agent {
+func (c *FakeConfig) Active() *config.Remote {
 	return c.ActiveRemote
 }
 
@@ -82,7 +82,7 @@ func TestStripsWhitespaceAddRemote(t *testing.T) {
 }
 
 func TestErroredExistingNameAddRemote(t *testing.T) {
-	fc := FakeConfig{Agents: []config.Agent{{Name: "name"}}}
+	fc := FakeConfig{Agents: []config.Remote{{Name: "name"}}}
 	output, err := AddRemote(&fc, "name", "unused")
 
 	assert.Equal(t, "", output.ToPrettyOutput())
@@ -120,9 +120,9 @@ func TestErroredConfigSaveAddRemote(t *testing.T) {
 }
 
 func TestListRemotes(t *testing.T) {
-	active := config.Agent{Name: "Active"}
+	active := config.Remote{Name: "Active"}
 	fc := FakeConfig{
-		Agents: []config.Agent{
+		Agents: []config.Remote{
 			{Name: "Test"},
 			active,
 		},
@@ -156,7 +156,7 @@ func TestSetActiveRemote(t *testing.T) {
 }
 
 func TestDescribeRemote(t *testing.T) {
-	fc := FakeConfig{Agents: []config.Agent{{Name: "Test"}}}
+	fc := FakeConfig{Agents: []config.Remote{{Name: "Test"}}}
 	output, err := DescribeRemote(&fc, "Test")
 
 	assert.NoError(t, err)
