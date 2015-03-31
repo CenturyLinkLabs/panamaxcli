@@ -140,6 +140,13 @@ func TestListRemotes(t *testing.T) {
 	}
 }
 
+func TestNoActiveListRemotes(t *testing.T) {
+	fc := FakeConfig{Agents: []config.Remote{{Name: "Test"}}}
+	assert.NotPanics(t, func() {
+		ListRemotes(&fc)
+	})
+}
+
 func TestListRemotesNoRemotes(t *testing.T) {
 	fc := FakeConfig{}
 	output := ListRemotes(&fc)

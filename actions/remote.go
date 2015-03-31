@@ -39,7 +39,7 @@ func ListRemotes(config config.Config) Output {
 	output := ListOutput{Labels: []string{"Active", "Name"}}
 	for _, r := range config.Remotes() {
 		activeMarker := ""
-		if *config.Active() == r {
+		if config.Active() != nil && *config.Active() == r {
 			activeMarker = "*"
 		}
 
