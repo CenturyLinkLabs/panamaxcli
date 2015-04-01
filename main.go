@@ -65,7 +65,8 @@ func init() {
 				{
 					Name:   "list",
 					Usage:  "List deployments",
-					Action: noopAction,
+					Before: actionRequiresActiveRemote,
+					Action: deploymentsListAction,
 				},
 				{
 					Name:        "describe",
@@ -132,6 +133,16 @@ func actionRequiresArgument(args ...string) func(c *cli.Context) error {
 	}
 }
 
+func actionRequiresActiveRemote(c *cli.Context) error {
+	if Config.Active() == nil {
+		message := "an active remote is required for this command"
+		log.Errorln(message)
+		return errors.New(message)
+	}
+
+	return nil
+}
+
 func noopAction(c *cli.Context) {
 	fmt.Println("This command is not implemented.")
 }
@@ -170,5 +181,14 @@ func setActiveRemoteAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
+	fmt.Printf(output.ToPrettyOutput())
+}
+
+func deploymentsListAction(c *cli.Context) {
+	output, err := actions.ListDeployments(*Config.Active())
+
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf(output.ToPrettyOutput())
 }
