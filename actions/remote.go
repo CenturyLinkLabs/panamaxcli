@@ -36,7 +36,7 @@ func ListRemotes(config config.Config) Output {
 		return PlainOutput{"No remotes"}
 	}
 
-	output := ListOutput{Labels: []string{"Active", "Name"}}
+	output := ListOutput{Labels: []string{"Active", "Name", "Endpoint"}}
 	for _, r := range config.Remotes() {
 		activeMarker := ""
 		if config.Active() != nil && *config.Active() == r {
@@ -44,8 +44,9 @@ func ListRemotes(config config.Config) Output {
 		}
 
 		output.AddRow(map[string]string{
-			"Active": activeMarker,
-			"Name":   r.Name,
+			"Active":   activeMarker,
+			"Name":     r.Name,
+			"Endpoint": r.Endpoint,
 		})
 	}
 	return &output

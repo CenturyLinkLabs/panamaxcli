@@ -1,8 +1,11 @@
 package actions
 
 import (
+	"bytes"
 	"fmt"
-	"strconv"
+	"sort"
+	"strings"
+	"text/tabwriter"
 )
 
 type Output interface {
@@ -19,19 +22,27 @@ func (o *ListOutput) AddRow(m map[string]string) {
 }
 
 func (o *ListOutput) ToPrettyOutput() string {
-	var output string
+	b := bytes.NewBuffer([]byte{})
+	w := tabwriter.NewWriter(b, 0, 8, 2, '\t', 0)
+
+	// Print Heading Row
 	for _, l := range o.Labels {
-		output += l
+		fmt.Fprintf(w, "%v\t", strings.ToUpper(l))
 	}
-	output += "\n---------\n"
-	for i, r := range o.Rows {
-		output += strconv.Itoa(i) + ") "
-		for _, l := range o.Labels {
-			output += r[l]
+	fmt.Fprintln(w)
+
+	// Print Rows
+	for _, r := range o.Rows {
+		row := make([]string, len(o.Labels))
+		for i, l := range o.Labels {
+			row[i] = r[l]
 		}
-		output += "\n"
+
+		fmt.Fprintf(w, "%s\n", strings.Join(row, "\t"))
 	}
-	return output
+
+	w.Flush()
+	return b.String()
 }
 
 type PlainOutput struct {
@@ -47,10 +58,19 @@ type DetailOutput struct {
 }
 
 func (o DetailOutput) ToPrettyOutput() string {
-	var output string
-	for k, v := range o.Details {
-		output += fmt.Sprintf("%s: %s\n", k, v)
+	b := bytes.NewBuffer([]byte{})
+	w := tabwriter.NewWriter(b, 0, 8, 2, '\t', 0)
+
+	var keys []string
+	for k := range o.Details {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		fmt.Fprintf(w, "%s\t%v\n", k, o.Details[k])
 	}
 
-	return output
+	w.Flush()
+	return b.String()
 }

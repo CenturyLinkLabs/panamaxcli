@@ -123,7 +123,7 @@ func TestListRemotes(t *testing.T) {
 	active := config.Remote{Name: "Active"}
 	fc := FakeConfig{
 		Agents: []config.Remote{
-			{Name: "Test"},
+			{Name: "Test", Endpoint: "http://example.com"},
 			active,
 		},
 		ActiveRemote: &active,
@@ -134,6 +134,7 @@ func TestListRemotes(t *testing.T) {
 	if assert.True(t, ok) && assert.Len(t, lo.Rows, 2) {
 		assert.Equal(t, "", lo.Rows[0]["Active"])
 		assert.Equal(t, "Test", lo.Rows[0]["Name"])
+		assert.Equal(t, "http://example.com", lo.Rows[0]["Endpoint"])
 
 		assert.Equal(t, "*", lo.Rows[1]["Active"])
 		assert.Equal(t, "Active", lo.Rows[1]["Name"])

@@ -22,10 +22,11 @@ func TestListOutput(t *testing.T) {
 func TestDetailOutput(t *testing.T) {
 	do := DetailOutput{
 		Details: map[string]string{
+			"Z":    "Other",
 			"Name": "Test Name",
 		},
 	}
 	s := do.ToPrettyOutput()
 
-	assert.Contains(t, s, "Name: Test Name")
+	assert.Regexp(t, `Name\s+Test Name\s+Z`, s)
 }
