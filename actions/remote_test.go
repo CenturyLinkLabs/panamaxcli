@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -164,17 +165,47 @@ func TestSetActiveRemote(t *testing.T) {
 }
 
 func TestDescribeRemote(t *testing.T) {
+	setupFactory()
+	fakeClient.Metadata = agent.Metadata{
+		Agent: struct {
+			Version string `json:"version"`
+		}{Version: "0.1"},
+		Adapter: struct {
+			Version   string `json:version`
+			Type      string `json:type`
+			IsHealthy bool   `json:isHealthy`
+		}{"0.2", "Test", true},
+	}
 	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
 	fc := FakeConfig{Agents: []config.Remote{r}}
 	output, err := DescribeRemote(&fc, "Test")
 
 	assert.NoError(t, err)
+	if assert.Len(t, fakeFactory.NewedRemotes, 1) {
+		assert.Equal(t, "Test", fakeFactory.NewedRemotes[0].Name)
+	}
+
 	do, ok := output.(*DetailOutput)
 	if assert.True(t, ok) {
 		assert.Equal(t, "false", do.Details["Active"])
 		assert.Equal(t, "Test", do.Details["Name"])
 		assert.Equal(t, "http://example.com", do.Details["Endpoint"])
+		assert.Equal(t, "0.1", do.Details["Agent Version"])
+		assert.Equal(t, "0.2", do.Details["Adapter Version"])
+		assert.Equal(t, "Test", do.Details["Adapter Type"])
+		assert.Equal(t, "true", do.Details["Adapter Is Healthy"])
 	}
+}
+
+func TestErroredClientDescribeRemote(t *testing.T) {
+	setupFactory()
+	fakeClient.ErrorForMetadata = errors.New("test error")
+	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
+	fc := FakeConfig{Agents: []config.Remote{r}}
+
+	output, err := DescribeRemote(&fc, "Test")
+	assert.Equal(t, "", output.ToPrettyOutput())
+	assert.EqualError(t, err, "test error")
 }
 
 func TestErroredNonexistantDescribeRemote(t *testing.T) {

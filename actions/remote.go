@@ -1,10 +1,12 @@
 package actions
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/CenturyLinkLabs/panamaxcli/config"
@@ -69,11 +71,35 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		isActive = "true"
 	}
 
+	client := DefaultAgentClientFactory.New(remote)
+	metadata, err := client.GetMetadata()
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	adapterMetadataBytes, err := json.Marshal(metadata.Adapter)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	adapterMetadata := struct {
+		Version   string
+		Type      string
+		IsHealthy bool
+	}{}
+	if err := json.Unmarshal(adapterMetadataBytes, &adapterMetadata); err != nil {
+		return PlainOutput{}, err
+	}
+
 	o := DetailOutput{
 		Details: map[string]string{
-			"Name":     remote.Name,
-			"Active":   isActive,
-			"Endpoint": remote.Endpoint,
+			"Name":               remote.Name,
+			"Active":             isActive,
+			"Endpoint":           remote.Endpoint,
+			"Agent Version":      metadata.Agent.Version,
+			"Adapter Version":    adapterMetadata.Version,
+			"Adapter Type":       adapterMetadata.Type,
+			"Adapter Is Healthy": strconv.FormatBool(adapterMetadata.IsHealthy),
 		},
 	}
 
