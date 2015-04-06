@@ -104,3 +104,23 @@ func TestRedeployDeploymentErrored(t *testing.T) {
 	assert.Equal(t, PlainOutput{}, o)
 	assert.EqualError(t, err, "Errored Redeploy")
 }
+
+func TestDeleteDeployment(t *testing.T) {
+	setupFactory()
+	r := config.Remote{}
+	o, err := DeleteDeployment(r, "1")
+
+	assert.Equal(t, "1", fakeClient.DeletedDeployment)
+	assert.NoError(t, err)
+	assert.Equal(t, "Successfully deleted deployment '1'", o.ToPrettyOutput())
+}
+
+func TestErroredDeleteDeployment(t *testing.T) {
+	setupFactory()
+	r := config.Remote{}
+	fakeClient.ErrorForDeploymentDelete = errors.New("Delete Error")
+	o, err := DeleteDeployment(r, "1")
+
+	assert.EqualError(t, err, "Delete Error")
+	assert.Equal(t, "", o.ToPrettyOutput())
+}

@@ -25,12 +25,14 @@ type FakeClient struct {
 	ErrorForDeploymentList        error
 	ErrorForDeploymentDescription error
 	ErrorForDeploymentRedeploy    error
+	ErrorForDeploymentDelete      error
 	DeploymentDescription         agent.DeploymentResponseFull
 	DeploymentDescriptionLite     agent.DeploymentResponseLite
 	DescribedDeployment           string
 	ListedDeployment              string
 	RedeployedDeployment          string
 	RedeploymentResponse          agent.DeploymentResponseLite
+	DeletedDeployment             string
 }
 
 func (c *FakeClient) ListDeployments() ([]agent.DeploymentResponseLite, error) {
@@ -49,6 +51,11 @@ func (c *FakeClient) DescribeDeployment(id string) (agent.DeploymentResponseFull
 func (c *FakeClient) RedeployDeployment(id string) (agent.DeploymentResponseLite, error) {
 	c.RedeployedDeployment = id
 	return c.RedeploymentResponse, c.ErrorForDeploymentRedeploy
+}
+
+func (c *FakeClient) DeleteDeployment(id string) error {
+	c.DeletedDeployment = id
+	return c.ErrorForDeploymentDelete
 }
 
 var (

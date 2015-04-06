@@ -87,7 +87,7 @@ func init() {
 					Usage:       "Delete a deployment",
 					Description: "Argument is a deployment ID.",
 					Before:      actionRequiresArgument("deployment ID"),
-					Action:      noopAction,
+					Action:      deleteDeploymentAction,
 				},
 			},
 		},
@@ -206,6 +206,16 @@ func describeDeploymentAction(c *cli.Context) {
 func redeployDeploymentAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.RedeployDeployment(*Config.Active(), name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf(output.ToPrettyOutput())
+}
+
+func deleteDeploymentAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.DeleteDeployment(*Config.Active(), name)
 	if err != nil {
 		log.Fatal(err)
 	}

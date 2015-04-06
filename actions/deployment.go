@@ -63,6 +63,15 @@ func RedeployDeployment(remote config.Remote, id string) (Output, error) {
 
 	svcs := strings.Join(desc.ServiceIDs, ", ")
 	o := PlainOutput{fmt.Sprintf("Redeployed '%s', services: %s", desc.Name, svcs)}
+	return &o, nil
+}
 
+func DeleteDeployment(remote config.Remote, id string) (Output, error) {
+	c := DefaultAgentClientFactory.New(remote)
+	if err := c.DeleteDeployment(id); err != nil {
+		return PlainOutput{}, err
+	}
+
+	o := PlainOutput{fmt.Sprintf("Successfully deleted deployment '%s'", id)}
 	return &o, nil
 }
