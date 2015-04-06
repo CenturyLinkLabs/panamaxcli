@@ -59,13 +59,13 @@ func init() {
 			},
 		},
 		{
-			Name:  "deployment",
-			Usage: "Manage deployments",
+			Name:   "deployment",
+			Usage:  "Manage deployments",
+			Before: actionRequiresActiveRemote,
 			Subcommands: []cli.Command{
 				{
 					Name:   "list",
 					Usage:  "List deployments",
-					Before: actionRequiresActiveRemote,
 					Action: deploymentsListAction,
 				},
 				{
@@ -73,7 +73,7 @@ func init() {
 					Usage:       "Describe a deployment",
 					Description: "Argument is a deployment ID.",
 					Before:      actionRequiresArgument("deployment ID"),
-					Action:      noopAction,
+					Action:      describeDeploymentAction,
 				},
 				{
 					Name:        "redeploy",
@@ -190,5 +190,15 @@ func deploymentsListAction(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf(output.ToPrettyOutput())
+}
+
+func describeDeploymentAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.DescribeDeployment(*Config.Active(), name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf(output.ToPrettyOutput())
 }

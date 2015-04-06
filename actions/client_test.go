@@ -19,17 +19,24 @@ func (f *FakeFactory) New(r config.Remote) client.Client {
 }
 
 type FakeClient struct {
-	Deployments      []agent.DeploymentResponseLite
-	Metadata         agent.Metadata
-	ErrorForMetadata error
+	Deployments                   []agent.DeploymentResponseLite
+	Metadata                      agent.Metadata
+	ErrorForMetadata              error
+	ErrorForDeploymentList        error
+	ErrorForDeploymentDescription error
+	DeploymentDescription         agent.DeploymentResponseFull
 }
 
 func (c FakeClient) ListDeployments() ([]agent.DeploymentResponseLite, error) {
-	return c.Deployments, nil
+	return c.Deployments, c.ErrorForDeploymentList
 }
 
 func (c FakeClient) GetMetadata() (agent.Metadata, error) {
 	return c.Metadata, c.ErrorForMetadata
+}
+
+func (c FakeClient) DescribeDeployment(name string) (agent.DeploymentResponseFull, error) {
+	return c.DeploymentDescription, c.ErrorForDeploymentDescription
 }
 
 var (
