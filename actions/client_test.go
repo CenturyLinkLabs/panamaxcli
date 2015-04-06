@@ -24,10 +24,16 @@ type FakeClient struct {
 	ErrorForMetadata              error
 	ErrorForDeploymentList        error
 	ErrorForDeploymentDescription error
+	ErrorForDeploymentRedeploy    error
 	DeploymentDescription         agent.DeploymentResponseFull
+	DeploymentDescriptionLite     agent.DeploymentResponseLite
+	DescribedDeployment           string
+	ListedDeployment              string
+	RedeployedDeployment          string
+	RedeploymentResponse          agent.DeploymentResponseLite
 }
 
-func (c FakeClient) ListDeployments() ([]agent.DeploymentResponseLite, error) {
+func (c *FakeClient) ListDeployments() ([]agent.DeploymentResponseLite, error) {
 	return c.Deployments, c.ErrorForDeploymentList
 }
 
@@ -35,8 +41,14 @@ func (c FakeClient) GetMetadata() (agent.Metadata, error) {
 	return c.Metadata, c.ErrorForMetadata
 }
 
-func (c FakeClient) DescribeDeployment(name string) (agent.DeploymentResponseFull, error) {
+func (c *FakeClient) DescribeDeployment(id string) (agent.DeploymentResponseFull, error) {
+	c.DescribedDeployment = id
 	return c.DeploymentDescription, c.ErrorForDeploymentDescription
+}
+
+func (c *FakeClient) RedeployDeployment(id string) (agent.DeploymentResponseLite, error) {
+	c.RedeployedDeployment = id
+	return c.RedeploymentResponse, c.ErrorForDeploymentRedeploy
 }
 
 var (

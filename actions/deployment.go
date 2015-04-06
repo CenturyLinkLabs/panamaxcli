@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -49,6 +50,19 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 			"Service Statuses": strings.Join(statuses, ", "),
 		},
 	}
+
+	return &o, nil
+}
+
+func RedeployDeployment(remote config.Remote, id string) (Output, error) {
+	c := DefaultAgentClientFactory.New(remote)
+	desc, err := c.RedeployDeployment(id)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	svcs := strings.Join(desc.ServiceIDs, ", ")
+	o := PlainOutput{fmt.Sprintf("Redeployed '%s', services: %s", desc.Name, svcs)}
 
 	return &o, nil
 }
