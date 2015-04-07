@@ -91,7 +91,7 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		return PlainOutput{}, err
 	}
 
-	o := DetailOutput{
+	do := DetailOutput{
 		Details: map[string]string{
 			"Name":               remote.Name,
 			"Active":             isActive,
@@ -103,7 +103,12 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		},
 	}
 
-	return &o, nil
+	depls, err := ListDeployments(remote)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	return &CombinedOutput{Outputs: []Output{do, depls}}, nil
 }
 
 func SetActiveRemote(config config.Config, name string) (Output, error) {

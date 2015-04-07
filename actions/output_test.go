@@ -30,3 +30,10 @@ func TestDetailOutput(t *testing.T) {
 
 	assert.Regexp(t, `Name\s+Test Name\s+Z`, s)
 }
+
+func TestCombinedOutput(t *testing.T) {
+	first := PlainOutput{"First"}
+	second := PlainOutput{"Second"}
+	o := CombinedOutput{[]Output{first, second}}
+	assert.Equal(t, "First\n\nSecond", o.ToPrettyOutput())
+}

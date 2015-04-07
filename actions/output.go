@@ -21,7 +21,7 @@ func (o *ListOutput) AddRow(m map[string]string) {
 	o.Rows = append(o.Rows, m)
 }
 
-func (o *ListOutput) ToPrettyOutput() string {
+func (o ListOutput) ToPrettyOutput() string {
 	b := bytes.NewBuffer([]byte{})
 	w := tabwriter.NewWriter(b, 0, 8, 2, '\t', 0)
 
@@ -73,4 +73,16 @@ func (o DetailOutput) ToPrettyOutput() string {
 
 	w.Flush()
 	return b.String()
+}
+
+type CombinedOutput struct {
+	Outputs []Output
+}
+
+func (o CombinedOutput) ToPrettyOutput() string {
+	outputStrs := make([]string, len(o.Outputs))
+	for i, out := range o.Outputs {
+		outputStrs[i] = out.ToPrettyOutput()
+	}
+	return strings.Join(outputStrs, "\n\n")
 }

@@ -176,28 +176,41 @@ func TestDescribeRemote(t *testing.T) {
 			IsHealthy bool   `json:isHealthy`
 		}{"0.2", "Test", true},
 	}
+	fakeClient.Deployments = []agent.DeploymentResponseLite{
+		{ID: 17, Name: "Test Deployment", ServiceIDs: []string{"1", "2"}},
+	}
 	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
 	fc := FakeConfig{Agents: []config.Remote{r}}
 	output, err := DescribeRemote(&fc, "Test")
 
 	assert.NoError(t, err)
-	if assert.Len(t, fakeFactory.NewedRemotes, 1) {
+	if assert.Len(t, fakeFactory.NewedRemotes, 2) {
 		assert.Equal(t, "Test", fakeFactory.NewedRemotes[0].Name)
 	}
 
-	do, ok := output.(*DetailOutput)
-	if assert.True(t, ok) {
-		assert.Equal(t, "false", do.Details["Active"])
-		assert.Equal(t, "Test", do.Details["Name"])
-		assert.Equal(t, "http://example.com", do.Details["Endpoint"])
-		assert.Equal(t, "0.1", do.Details["Agent Version"])
-		assert.Equal(t, "0.2", do.Details["Adapter Version"])
-		assert.Equal(t, "Test", do.Details["Adapter Type"])
-		assert.Equal(t, "true", do.Details["Adapter Is Healthy"])
+	co, ok := output.(*CombinedOutput)
+	if assert.True(t, ok) && assert.Len(t, co.Outputs, 2) {
+		do, ok := co.Outputs[0].(DetailOutput)
+		if assert.True(t, ok) {
+			assert.Equal(t, "false", do.Details["Active"])
+			assert.Equal(t, "Test", do.Details["Name"])
+			assert.Equal(t, "http://example.com", do.Details["Endpoint"])
+			assert.Equal(t, "0.1", do.Details["Agent Version"])
+			assert.Equal(t, "0.2", do.Details["Adapter Version"])
+			assert.Equal(t, "Test", do.Details["Adapter Type"])
+			assert.Equal(t, "true", do.Details["Adapter Is Healthy"])
+		}
+
+		lo, ok := co.Outputs[1].(*ListOutput)
+		if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
+			r := lo.Rows[0]
+			assert.Equal(t, "17", r["ID"])
+			assert.Equal(t, "Test Deployment", r["Name"])
+		}
 	}
 }
 
-func TestErroredClientDescribeRemote(t *testing.T) {
+func TestErroredClientMetadataDescribeRemote(t *testing.T) {
 	setupFactory()
 	fakeClient.ErrorForMetadata = errors.New("test error")
 	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
@@ -206,6 +219,17 @@ func TestErroredClientDescribeRemote(t *testing.T) {
 	output, err := DescribeRemote(&fc, "Test")
 	assert.Equal(t, "", output.ToPrettyOutput())
 	assert.EqualError(t, err, "test error")
+}
+
+func TestErroredClientDeploymentListDescribeRemote(t *testing.T) {
+	setupFactory()
+	fakeClient.ErrorForDeploymentList = errors.New("test error deployment list")
+	r := config.Remote{Name: "Test", Endpoint: "http://example.com"}
+	fc := FakeConfig{Agents: []config.Remote{r}}
+
+	output, err := DescribeRemote(&fc, "Test")
+	assert.Equal(t, "", output.ToPrettyOutput())
+	assert.EqualError(t, err, "test error deployment list")
 }
 
 func TestErroredNonexistantDescribeRemote(t *testing.T) {
