@@ -181,13 +181,11 @@ func TestSetActiveRemote(t *testing.T) {
 func TestDescribeRemote(t *testing.T) {
 	setupFactory()
 	fakeClient.Metadata = agent.Metadata{
-		Agent: struct {
-			Version string `json:"version"`
-		}{Version: "0.1"},
+		Agent: agent.AgentMetadata{Version: "0.1"},
 		Adapter: struct {
-			Version   string `json:version`
-			Type      string `json:type`
-			IsHealthy bool   `json:isHealthy`
+			Version   string `json:"version"`
+			Type      string `json:"type"`
+			IsHealthy bool   `json:"isHealthy"`
 		}{"0.2", "Test", true},
 	}
 	fakeClient.Deployments = []agent.DeploymentResponseLite{
