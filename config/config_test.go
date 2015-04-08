@@ -62,6 +62,64 @@ func TestErroredBadFormatLoad(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid character")
 }
 
+func TestSuccessfulRemove(t *testing.T) {
+	dir, err := ioutil.TempDir("", "agent-test")
+	defer os.RemoveAll(dir)
+	assert.NoError(t, err)
+
+	c := FileConfig{
+		Path: dir + "/agent",
+		store: Store{
+			Remotes: []Remote{
+				{Name: "Active"},
+				{Name: "Inactive"},
+			},
+			Active: "Active",
+		},
+	}
+	c.Remove("Inactive")
+
+	// To make sure it really got persisted...
+	c.store = Store{}
+	assert.NoError(t, c.Load())
+
+	if assert.Len(t, c.Remotes(), 1) {
+		assert.Equal(t, "Active", c.Remotes()[0].Name)
+	}
+
+	assert.NotNil(t, c.Active())
+}
+
+func TestSuccessfulActiveRemove(t *testing.T) {
+	dir, err := ioutil.TempDir("", "agent-test")
+	defer os.RemoveAll(dir)
+	assert.NoError(t, err)
+
+	c := FileConfig{
+		Path: dir + "/agent",
+		store: Store{
+			Remotes: []Remote{
+				{Name: "Active"},
+			},
+			Active: "Active",
+		},
+	}
+	c.Remove("Active")
+
+	// To make sure it really got persisted...
+	c.store = Store{}
+	assert.NoError(t, c.Load())
+
+	assert.Empty(t, c.Remotes())
+	assert.Nil(t, c.Active())
+}
+
+func TestErroredNonexistantRemove(t *testing.T) {
+	c := FileConfig{}
+	err := c.Remove("Nonexistant")
+	assert.EqualError(t, err, "remote 'Nonexistant' does not exist")
+}
+
 func TestConfigGet(t *testing.T) {
 	expectedRemote := Remote{Name: "Test"}
 	c := FileConfig{store: Store{Remotes: []Remote{expectedRemote}}}

@@ -60,7 +60,7 @@ func init() {
 					Usage:       "Remove a remote",
 					Description: "Argument is a remote name.",
 					Before:      actionRequiresArgument("remote name"),
-					Action:      noopAction,
+					Action:      removeRemoteAction,
 				},
 				{
 					Name:        "token",
@@ -174,15 +174,21 @@ func actionRequiresActiveRemote(c *cli.Context) error {
 	return nil
 }
 
-func noopAction(c *cli.Context) {
-	fmt.Println("This command is not implemented.")
-}
-
 func remoteAddAction(c *cli.Context) {
 	name := c.Args().First()
 	path := c.Args().Get(1)
 
 	output, err := actions.AddRemote(Config, name, path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(output.ToPrettyOutput())
+}
+
+func removeRemoteAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.RemoveRemote(Config, name)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -38,6 +38,14 @@ func AddRemote(config config.Config, name string, path string) (Output, error) {
 	return PlainOutput{"Successfully added!"}, nil
 }
 
+func RemoveRemote(config config.Config, name string) (Output, error) {
+	if err := config.Remove(name); err != nil {
+		return PlainOutput{}, err
+	}
+	out := fmt.Sprintf("Successfully removed remote '%s' from configuration!", name)
+	return PlainOutput{out}, nil
+}
+
 func ListRemotes(config config.Config) Output {
 	agents := config.Remotes()
 	if len(agents) == 0 {

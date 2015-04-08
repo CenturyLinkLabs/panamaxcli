@@ -12,6 +12,7 @@ import (
 
 type Config interface {
 	Save(name string, token string) error
+	Remove(name string) error
 	Get(name string) (Remote, error)
 	Remotes() []Remote
 	SetActive(name string) error
@@ -44,6 +45,25 @@ func (c *FileConfig) Save(name string, token string) error {
 	}
 
 	c.store.Remotes = append(c.Remotes(), r)
+	return c.saveAll()
+}
+
+func (c *FileConfig) Remove(name string) error {
+	if _, err := c.Get(name); err != nil {
+		return err
+	}
+
+	if c.Active() != nil && c.Active().Name == name {
+		c.store.Active = ""
+	}
+
+	var newRemotes []Remote
+	for _, r := range c.store.Remotes {
+		if r.Name != name {
+			newRemotes = append(newRemotes, r)
+		}
+	}
+	c.store.Remotes = newRemotes
 	return c.saveAll()
 }
 
