@@ -76,13 +76,28 @@ func (o DetailOutput) ToPrettyOutput() string {
 }
 
 type CombinedOutput struct {
-	Outputs []Output
+	Outputs []sectionedOutput
 }
 
-func (o CombinedOutput) ToPrettyOutput() string {
+type sectionedOutput struct {
+	Heading string
+	Output  Output
+}
+
+func (o *CombinedOutput) AddOutput(heading string, output Output) {
+	o.Outputs = append(o.Outputs, sectionedOutput{heading, output})
+}
+
+func (o *CombinedOutput) ToPrettyOutput() string {
 	outputStrs := make([]string, len(o.Outputs))
 	for i, out := range o.Outputs {
-		outputStrs[i] = out.ToPrettyOutput()
+		var s string
+		if out.Heading == "" {
+			s = out.Output.ToPrettyOutput()
+		} else {
+			s = fmt.Sprintf("%s\n%s", strings.ToUpper(out.Heading), out.Output.ToPrettyOutput())
+		}
+		outputStrs[i] = s
 	}
 	return strings.Join(outputStrs, "\n\n")
 }

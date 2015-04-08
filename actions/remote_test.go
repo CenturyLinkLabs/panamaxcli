@@ -190,7 +190,7 @@ func TestDescribeRemote(t *testing.T) {
 
 	co, ok := output.(*CombinedOutput)
 	if assert.True(t, ok) && assert.Len(t, co.Outputs, 2) {
-		do, ok := co.Outputs[0].(DetailOutput)
+		do, ok := co.Outputs[0].Output.(DetailOutput)
 		if assert.True(t, ok) {
 			assert.Equal(t, "false", do.Details["Active"])
 			assert.Equal(t, "Test", do.Details["Name"])
@@ -201,7 +201,7 @@ func TestDescribeRemote(t *testing.T) {
 			assert.Equal(t, "true", do.Details["Adapter Is Healthy"])
 		}
 
-		lo, ok := co.Outputs[1].(*ListOutput)
+		lo, ok := co.Outputs[1].Output.(*ListOutput)
 		if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
 			r := lo.Rows[0]
 			assert.Equal(t, "17", r["ID"])

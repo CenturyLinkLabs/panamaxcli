@@ -103,12 +103,16 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		},
 	}
 
-	depls, err := ListDeployments(remote)
+	lo, err := ListDeployments(remote)
 	if err != nil {
 		return PlainOutput{}, err
 	}
 
-	return &CombinedOutput{Outputs: []Output{do, depls}}, nil
+	co := CombinedOutput{}
+	co.AddOutput("", do)
+	co.AddOutput("Deployments", lo)
+
+	return &co, nil
 }
 
 func SetActiveRemote(config config.Config, name string) (Output, error) {

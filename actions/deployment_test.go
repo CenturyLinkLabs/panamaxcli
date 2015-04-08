@@ -64,15 +64,15 @@ func TestDescribeDeployment(t *testing.T) {
 	assert.Equal(t, "1", fakeClient.DescribedDeployment)
 	assert.Len(t, fakeFactory.NewedRemotes, 1)
 
-	co, ok := o.(CombinedOutput)
+	co, ok := o.(*CombinedOutput)
 	if assert.True(t, ok) && assert.Len(t, co.Outputs, 2) {
-		do, ok := co.Outputs[0].(DetailOutput)
+		do, ok := co.Outputs[0].Output.(DetailOutput)
 		if assert.True(t, ok) {
 			assert.Equal(t, "Test", do.Details["Name"])
 			assert.Equal(t, "1", do.Details["ID"])
 		}
 
-		lo, ok := co.Outputs[1].(ListOutput)
+		lo, ok := co.Outputs[1].Output.(ListOutput)
 		if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
 			assert.Equal(t, "wp", lo.Rows[0]["ID"])
 			assert.Equal(t, "running", lo.Rows[0]["State"])

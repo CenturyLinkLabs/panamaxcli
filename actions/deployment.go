@@ -54,7 +54,10 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 		})
 	}
 
-	return CombinedOutput{Outputs: []Output{do, lo}}, nil
+	co := CombinedOutput{}
+	co.AddOutput("", do)
+	co.AddOutput("Services", lo)
+	return &co, nil
 }
 
 func RedeployDeployment(remote config.Remote, id string) (Output, error) {

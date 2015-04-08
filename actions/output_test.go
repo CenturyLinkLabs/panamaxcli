@@ -36,6 +36,8 @@ func TestDetailOutput(t *testing.T) {
 func TestCombinedOutput(t *testing.T) {
 	first := PlainOutput{"First"}
 	second := PlainOutput{"Second"}
-	o := CombinedOutput{[]Output{first, second}}
-	assert.Equal(t, "First\n\nSecond", o.ToPrettyOutput())
+	o := CombinedOutput{}
+	o.AddOutput("", first)
+	o.AddOutput("Heading 2", second)
+	assert.Equal(t, "First\n\nHEADING 2\nSecond", o.ToPrettyOutput())
 }
