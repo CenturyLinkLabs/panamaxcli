@@ -117,9 +117,24 @@ func main() {
 	app.Usage = "Panamax command-line utility."
 	app.Authors = []cli.Author{{"CenturyLink Labs", "clt-labs-futuretech@centurylink.com"}}
 	app.Commands = Commands
-	app.Before = loadConfig
+	app.Before = initializeApp
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "Enable verbose logging",
+		},
+	}
 
 	app.Run(os.Args)
+}
+
+func initializeApp(c *cli.Context) error {
+	if c.GlobalBool("debug") {
+		// Remote Agent Client will write to logrus with helpful info!
+		log.SetLevel(log.DebugLevel)
+	}
+
+	return loadConfig(c)
 }
 
 func loadConfig(c *cli.Context) error {

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -11,9 +12,14 @@ import (
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/api"
+	log "github.com/Sirupsen/logrus"
 )
 
 var DefaultHTTPTimeout = 10
+
+func init() {
+	log.SetLevel(log.ErrorLevel)
+}
 
 type RequestError struct {
 	StatusCode int
@@ -67,9 +73,50 @@ func (c APIClient) DeleteDeployment(id string) error {
 	return c.doRequest("DELETE", api.URLForDeploymentID(id), nil)
 }
 
+func (c APIClient) doRequest(method string, urn string, o interface{}) error {
+	httpClient := getClient()
+
+	url := c.Endpoint + urn
+	req, err := http.NewRequest(method, url, strings.NewReader(""))
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth(c.Username, c.Password)
+
+	log.WithFields(log.Fields{
+		"URL":    url,
+		"Method": method,
+	}).Info("Making request")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var prettyJSON bytes.Buffer
+	json.Indent(&prettyJSON, body, " ", "  ")
+	log.WithFields(log.Fields{
+		"Status": resp.StatusCode,
+		"Body":   prettyJSON.String(),
+	}).Info("Received Response")
+
+	if resp.StatusCode >= 400 {
+		return RequestError{StatusCode: resp.StatusCode, Body: string(body)}
+	}
+
+	if o == nil {
+		return nil
+	}
+	return json.Unmarshal(body, &o)
+}
+
 // TODO You need to be verifying the server cert and not ignoring it, but this
 // keeps us working.
-func (c APIClient) doRequest(method string, urn string, o interface{}) error {
+func getClient() *http.Client {
 	//pool := x509.NewCertPool()
 	//pool.AppendCertsFromPEM(CertBytes)
 	nonverifyingSSL := &http.Transport{
@@ -79,28 +126,9 @@ func (c APIClient) doRequest(method string, urn string, o interface{}) error {
 			InsecureSkipVerify: true,
 		},
 	}
-	insecureHTTPClient := &http.Client{
+
+	return &http.Client{
 		Timeout:   time.Duration(DefaultHTTPTimeout) * time.Second,
 		Transport: nonverifyingSSL,
 	}
-
-	req, err := http.NewRequest(method, c.Endpoint+urn, strings.NewReader(""))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.SetBasicAuth(c.Username, c.Password)
-	resp, err := insecureHTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return RequestError{StatusCode: resp.StatusCode, Body: string(body)}
-	}
-
-	if o == nil {
-		return nil
-	}
-	return json.NewDecoder(resp.Body).Decode(o)
 }
