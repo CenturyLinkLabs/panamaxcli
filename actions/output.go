@@ -72,7 +72,7 @@ func (o DetailOutput) ToPrettyOutput() string {
 	}
 
 	w.Flush()
-	return b.String()
+	return strings.TrimSpace(b.String())
 }
 
 type CombinedOutput struct {

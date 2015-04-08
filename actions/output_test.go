@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,7 @@ func TestDetailOutput(t *testing.T) {
 	s := do.ToPrettyOutput()
 
 	assert.Regexp(t, `Name\s+Test Name\s+Z`, s)
+	assert.False(t, strings.HasSuffix(s, "\n"))
 }
 
 func TestCombinedOutput(t *testing.T) {
