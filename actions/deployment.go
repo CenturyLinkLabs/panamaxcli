@@ -19,11 +19,12 @@ func ListDeployments(remote config.Remote) (Output, error) {
 		return PlainOutput{"No Deployments"}, nil
 	}
 
-	o := ListOutput{Labels: []string{"ID", "Name"}}
+	o := ListOutput{Labels: []string{"ID", "Name", "Services"}}
 	for _, d := range deps {
 		o.AddRow(map[string]string{
-			"ID":   strconv.Itoa(d.ID),
-			"Name": d.Name,
+			"ID":       strconv.Itoa(d.ID),
+			"Name":     d.Name,
+			"Services": strconv.Itoa(len(d.ServiceIDs)),
 		})
 	}
 
