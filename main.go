@@ -21,19 +21,22 @@ var (
 func init() {
 	Commands = []cli.Command{
 		{
-			Name:  "remote",
-			Usage: "Manage remotes",
+			Name:    "remote",
+			Aliases: []string{"re"},
+			Usage:   "Manage remotes",
 			Subcommands: []cli.Command{
 				{
-					Name:   "list",
-					Usage:  "List remotes",
-					Action: remoteListAction,
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "List remotes",
+					Action:  remoteListAction,
 				},
 				{
-					Name:   "describe",
-					Usage:  "Describe a remote",
-					Before: actionRequiresArgument("remote name"),
-					Action: remoteDescribeAction,
+					Name:    "describe",
+					Aliases: []string{"d"},
+					Usage:   "Describe a remote",
+					Before:  actionRequiresArgument("remote name"),
+					Action:  remoteDescribeAction,
 				},
 				{
 					Name:        "add",
@@ -59,17 +62,20 @@ func init() {
 			},
 		},
 		{
-			Name:   "deployment",
-			Usage:  "Manage deployments",
-			Before: actionRequiresActiveRemote,
+			Name:    "deployment",
+			Aliases: []string{"de"},
+			Usage:   "Manage deployments",
+			Before:  actionRequiresActiveRemote,
 			Subcommands: []cli.Command{
 				{
-					Name:   "list",
-					Usage:  "List deployments",
-					Action: deploymentsListAction,
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "List deployments",
+					Action:  deploymentsListAction,
 				},
 				{
 					Name:        "describe",
+					Aliases:     []string{"d"},
 					Usage:       "Describe a deployment",
 					Description: "Argument is a deployment ID.",
 					Before:      actionRequiresArgument("deployment ID"),
