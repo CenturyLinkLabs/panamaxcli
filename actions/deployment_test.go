@@ -93,7 +93,7 @@ func TestDescribeDeploymentErrored(t *testing.T) {
 func TestRedeployDeployment(t *testing.T) {
 	setupFactory()
 	fakeClient.RedeploymentResponse = agent.DeploymentResponseLite{
-		ID:         1,
+		ID:         2,
 		Name:       "Test Name",
 		ServiceIDs: []string{"wp", "db"},
 	}
@@ -101,7 +101,11 @@ func TestRedeployDeployment(t *testing.T) {
 	o, err := RedeployDeployment(r, "1")
 	assert.Equal(t, "1", fakeClient.RedeployedDeployment)
 	assert.NoError(t, err)
-	assert.Equal(t, "Redeployed 'Test Name', services: wp, db", o.ToPrettyOutput())
+	assert.Equal(
+		t,
+		"Redeployed 'Test Name' as Deployment ID 2",
+		o.ToPrettyOutput(),
+	)
 }
 
 func TestRedeployDeploymentErrored(t *testing.T) {

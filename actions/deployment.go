@@ -3,7 +3,6 @@ package actions
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/CenturyLinkLabs/panamaxcli/config"
 )
@@ -67,8 +66,7 @@ func RedeployDeployment(remote config.Remote, id string) (Output, error) {
 		return PlainOutput{}, err
 	}
 
-	svcs := strings.Join(desc.ServiceIDs, ", ")
-	o := PlainOutput{fmt.Sprintf("Redeployed '%s', services: %s", desc.Name, svcs)}
+	o := PlainOutput{fmt.Sprintf("Redeployed '%s' as Deployment ID %d", desc.Name, desc.ID)}
 	return &o, nil
 }
 
