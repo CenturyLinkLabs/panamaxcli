@@ -59,6 +59,13 @@ func init() {
 					Before:      actionRequiresArgument("remote name"),
 					Action:      noopAction,
 				},
+				{
+					Name:        "token",
+					Usage:       "Show the remote's token",
+					Description: "Argument is a remote name.",
+					Before:      actionRequiresArgument("remote name"),
+					Action:      getTokenAction,
+				},
 			},
 		},
 		{
@@ -222,6 +229,16 @@ func redeployDeploymentAction(c *cli.Context) {
 func deleteDeploymentAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.DeleteDeployment(*Config.Active(), name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(output.ToPrettyOutput())
+}
+
+func getTokenAction(c *cli.Context) {
+	name := c.Args().First()
+	output, err := actions.GetRemoteToken(Config, name)
 	if err != nil {
 		log.Fatal(err)
 	}

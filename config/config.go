@@ -12,7 +12,7 @@ import (
 
 type Config interface {
 	Save(name string, token string) error
-	Exists(name string) bool
+	Get(name string) (Remote, error)
 	Remotes() []Remote
 	SetActive(name string) error
 	Active() *Remote
@@ -47,20 +47,21 @@ func (c *FileConfig) Save(name string, token string) error {
 	return c.saveAll()
 }
 
-func (c *FileConfig) Exists(name string) bool {
-	for _, a := range c.Remotes() {
-		if a.Name == name {
-			return true
+func (c *FileConfig) Get(name string) (Remote, error) {
+	for _, r := range c.Remotes() {
+		if r.Name == name {
+			return r, nil
 		}
 	}
-	return false
+	return Remote{}, fmt.Errorf("remote '%s' does not exist", name)
 }
 
 func (c *FileConfig) SetActive(name string) error {
-	if !c.Exists(name) {
-		return fmt.Errorf("remote '%s' does not exist", name)
+	r, err := c.Get(name)
+	if err != nil {
+		return err
 	}
-	c.store.Active = name
+	c.store.Active = r.Name
 	c.saveAll()
 	return nil
 }

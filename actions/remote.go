@@ -18,7 +18,7 @@ func AddRemote(config config.Config, name string, path string) (Output, error) {
 	if !format.MatchString(name) {
 		return PlainOutput{}, errors.New("Invalid name")
 	}
-	if config.Exists(name) {
+	if _, err := config.Get(name); err == nil {
 		return PlainOutput{}, errors.New("Name already exists")
 	}
 	token, err := ioutil.ReadFile(path)
@@ -61,23 +61,17 @@ func ListRemotes(config config.Config) Output {
 }
 
 func DescribeRemote(c config.Config, name string) (Output, error) {
-	var remote config.Remote
-	for _, r := range c.Remotes() {
-		if r.Name == name {
-			remote = r
-			break
-		}
-	}
-	if remote.Name == "" {
-		return PlainOutput{}, fmt.Errorf("the remote '%s' does not exist", name)
+	r, err := c.Get(name)
+	if err != nil {
+		return PlainOutput{}, err
 	}
 
 	isActive := "false"
-	if c.Active() != nil && c.Active().Name == remote.Name {
+	if c.Active() != nil && c.Active().Name == r.Name {
 		isActive = "true"
 	}
 
-	client := DefaultAgentClientFactory.New(remote)
+	client := DefaultAgentClientFactory.New(r)
 	metadata, err := client.GetMetadata()
 	if err != nil {
 		return PlainOutput{}, err
@@ -99,9 +93,9 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 
 	do := DetailOutput{
 		Details: map[string]string{
-			"Name":               remote.Name,
+			"Name":               r.Name,
 			"Active":             isActive,
-			"Endpoint":           remote.Endpoint,
+			"Endpoint":           r.Endpoint,
 			"Agent Version":      metadata.Agent.Version,
 			"Adapter Version":    adapterMetadata.Version,
 			"Adapter Type":       adapterMetadata.Type,
@@ -109,7 +103,7 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		},
 	}
 
-	lo, err := ListDeployments(remote)
+	lo, err := ListDeployments(r)
 	if err != nil {
 		return PlainOutput{}, err
 	}
@@ -126,4 +120,12 @@ func SetActiveRemote(config config.Config, name string) (Output, error) {
 		return PlainOutput{}, err
 	}
 	return PlainOutput{"Success!"}, nil
+}
+
+func GetRemoteToken(c config.Config, name string) (Output, error) {
+	r, err := c.Get(name)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+	return PlainOutput{r.Token}, nil
 }

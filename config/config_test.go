@@ -62,10 +62,21 @@ func TestErroredBadFormatLoad(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid character")
 }
 
-func TestConfigExists(t *testing.T) {
-	c := FileConfig{store: Store{Remotes: []Remote{{Name: "Test"}}}}
-	assert.True(t, c.Exists("Test"))
-	assert.False(t, c.Exists("BadName"))
+func TestConfigGet(t *testing.T) {
+	expectedRemote := Remote{Name: "Test"}
+	c := FileConfig{store: Store{Remotes: []Remote{expectedRemote}}}
+	r, err := c.Get("Test")
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedRemote, r)
+}
+
+func TestConfigGetErorredNonexistant(t *testing.T) {
+	c := FileConfig{}
+	r, err := c.Get("bad")
+
+	assert.EqualError(t, err, "remote 'bad' does not exist")
+	assert.Equal(t, Remote{}, r)
 }
 
 func TestConfigRemotes(t *testing.T) {

@@ -2,6 +2,7 @@ package actions
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -28,14 +29,14 @@ func (c *FakeConfig) Save(name string, token string) error {
 	return c.ErrorForSave
 }
 
-func (c *FakeConfig) Exists(name string) bool {
-	for _, a := range c.Agents {
-		if a.Name == name {
-			return true
+func (c *FakeConfig) Get(name string) (config.Remote, error) {
+	for _, r := range c.Agents {
+		if r.Name == name {
+			return r, nil
 		}
 	}
 
-	return false
+	return config.Remote{}, fmt.Errorf("the remote '%s' does not exist", name)
 }
 
 func (c *FakeConfig) Remotes() []config.Remote {
@@ -259,4 +260,22 @@ func TestErroredSetActiveRemote(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Equal(t, "", output.ToPrettyOutput())
+}
+
+func TestGetRemoteToken(t *testing.T) {
+	fc := FakeConfig{
+		Agents: []config.Remote{{Name: "Test", Token: "Token\nText"}},
+	}
+	output, err := GetRemoteToken(&fc, "Test")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Token\nText", output.ToPrettyOutput())
+}
+
+func TestErroredGetRemoteToken(t *testing.T) {
+	fc := FakeConfig{}
+	output, err := GetRemoteToken(&fc, "nonexistant")
+
+	assert.EqualError(t, err, "the remote 'nonexistant' does not exist")
+	assert.Empty(t, output.ToPrettyOutput())
 }
