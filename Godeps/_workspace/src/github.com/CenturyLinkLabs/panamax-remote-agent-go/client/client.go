@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/api"
 )
+
+var DefaultHTTPTimeout = 10
 
 type RequestError struct {
 	StatusCode int
@@ -76,7 +79,10 @@ func (c APIClient) doRequest(method string, urn string, o interface{}) error {
 			InsecureSkipVerify: true,
 		},
 	}
-	insecureHTTPClient := &http.Client{Transport: nonverifyingSSL}
+	insecureHTTPClient := &http.Client{
+		Timeout:   time.Duration(DefaultHTTPTimeout) * time.Second,
+		Transport: nonverifyingSSL,
+	}
 
 	req, err := http.NewRequest(method, c.Endpoint+urn, strings.NewReader(""))
 	req.Header.Add("Content-Type", "application/json")

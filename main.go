@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/CenturyLinkLabs/panamax-remote-agent-go/client"
 	"github.com/CenturyLinkLabs/panamaxcli/actions"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
 	log "github.com/Sirupsen/logrus"
@@ -19,6 +20,8 @@ var (
 )
 
 func init() {
+	client.DefaultHTTPTimeout = 10
+
 	Commands = []cli.Command{
 		{
 			Name:    "remote",
