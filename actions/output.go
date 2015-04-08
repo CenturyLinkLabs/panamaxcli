@@ -42,7 +42,7 @@ func (o ListOutput) ToPrettyOutput() string {
 	}
 
 	w.Flush()
-	return b.String()
+	return strings.TrimSpace(b.String())
 }
 
 type PlainOutput struct {

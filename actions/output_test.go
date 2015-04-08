@@ -18,6 +18,7 @@ func TestListOutput(t *testing.T) {
 
 	assert.Contains(t, s, "ID")
 	assert.Contains(t, s, "10")
+	assert.False(t, strings.HasSuffix(s, "\n"))
 }
 
 func TestDetailOutput(t *testing.T) {

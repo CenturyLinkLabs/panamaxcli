@@ -162,12 +162,12 @@ func remoteAddAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func remoteListAction(c *cli.Context) {
 	output := actions.ListRemotes(Config)
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func remoteDescribeAction(c *cli.Context) {
@@ -177,7 +177,7 @@ func remoteDescribeAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func setActiveRemoteAction(c *cli.Context) {
@@ -187,7 +187,7 @@ func setActiveRemoteAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func deploymentsListAction(c *cli.Context) {
@@ -196,7 +196,7 @@ func deploymentsListAction(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func describeDeploymentAction(c *cli.Context) {
@@ -206,7 +206,7 @@ func describeDeploymentAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func redeployDeploymentAction(c *cli.Context) {
@@ -216,7 +216,7 @@ func redeployDeploymentAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func deleteDeploymentAction(c *cli.Context) {
@@ -226,5 +226,5 @@ func deleteDeploymentAction(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf(output.ToPrettyOutput())
+	fmt.Println(output.ToPrettyOutput())
 }
