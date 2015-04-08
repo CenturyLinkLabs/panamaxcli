@@ -38,21 +38,23 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 		return PlainOutput{}, err
 	}
 
-	statuses := make([]string, len(desc.Status.Services))
-	for i, s := range desc.Status.Services {
-		statuses[i] = s.ActualState
-	}
-
-	o := DetailOutput{
+	do := DetailOutput{
 		Details: map[string]string{
-			"Name":             desc.Name,
-			"ID":               strconv.Itoa(desc.ID),
-			"Redeployable":     strconv.FormatBool(desc.Redeployable),
-			"Service Statuses": strings.Join(statuses, ", "),
+			"Name":         desc.Name,
+			"ID":           strconv.Itoa(desc.ID),
+			"Redeployable": strconv.FormatBool(desc.Redeployable),
 		},
 	}
 
-	return &o, nil
+	lo := ListOutput{Labels: []string{"ID", "State"}}
+	for _, s := range desc.Status.Services {
+		lo.AddRow(map[string]string{
+			"ID":    s.ID,
+			"State": s.ActualState,
+		})
+	}
+
+	return CombinedOutput{Outputs: []Output{do, lo}}, nil
 }
 
 func RedeployDeployment(remote config.Remote, id string) (Output, error) {

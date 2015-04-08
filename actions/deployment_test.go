@@ -54,10 +54,7 @@ func TestDescribeDeployment(t *testing.T) {
 		Name: "Test",
 		ID:   1,
 		Status: agent.Status{
-			Services: []agent.Service{
-				{ID: "1", ActualState: "running"},
-				{ID: "2", ActualState: "exploded"},
-			},
+			Services: []agent.Service{{ID: "wp", ActualState: "running"}},
 		},
 	}
 	o, err := DescribeDeployment(r, "1")
@@ -66,11 +63,20 @@ func TestDescribeDeployment(t *testing.T) {
 
 	assert.Equal(t, "1", fakeClient.DescribedDeployment)
 	assert.Len(t, fakeFactory.NewedRemotes, 1)
-	do, ok := o.(*DetailOutput)
-	if assert.True(t, ok) {
-		assert.Equal(t, "Test", do.Details["Name"])
-		assert.Equal(t, "1", do.Details["ID"])
-		assert.Equal(t, "running, exploded", do.Details["Service Statuses"])
+
+	co, ok := o.(CombinedOutput)
+	if assert.True(t, ok) && assert.Len(t, co.Outputs, 2) {
+		do, ok := co.Outputs[0].(DetailOutput)
+		if assert.True(t, ok) {
+			assert.Equal(t, "Test", do.Details["Name"])
+			assert.Equal(t, "1", do.Details["ID"])
+		}
+
+		lo, ok := co.Outputs[1].(ListOutput)
+		if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
+			assert.Equal(t, "wp", lo.Rows[0]["ID"])
+			assert.Equal(t, "running", lo.Rows[0]["State"])
+		}
 	}
 }
 
