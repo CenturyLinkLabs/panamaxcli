@@ -24,6 +24,7 @@ type FakeConfig struct {
 func (c *FakeConfig) Save(name string, token string) error {
 	c.SavedName = name
 	c.SavedToken = token
+	c.Agents = append(c.Agents, config.Remote{Name: name, Token: token})
 	return c.ErrorForSave
 }
 
@@ -69,7 +70,19 @@ func TestAddRemote(t *testing.T) {
 	assert.Equal(t, "testname", fc.SavedName)
 	assert.Equal(t, "token data", fc.SavedToken)
 	assert.NoError(t, err)
-	assert.Equal(t, "Success!", output.ToPrettyOutput())
+	assert.Equal(t, "Successfully added! 'testname' is now your active remote.", output.ToPrettyOutput())
+	assert.Equal(t, "testname", fc.ActivatedRemoteName)
+}
+
+func TestInactiveSecondAddRemote(t *testing.T) {
+	tokenFilePath := setupTokenFile(t, "token data")
+	defer os.Remove(tokenFilePath)
+	fc := FakeConfig{Agents: []config.Remote{{Name: "Test"}}}
+	output, err := AddRemote(&fc, "testname", tokenFilePath)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Successfully added!", output.ToPrettyOutput())
+	assert.Equal(t, "", fc.ActivatedRemoteName)
 }
 
 func TestStripsWhitespaceAddRemote(t *testing.T) {
