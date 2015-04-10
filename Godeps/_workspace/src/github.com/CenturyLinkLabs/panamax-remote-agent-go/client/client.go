@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -74,7 +75,7 @@ func (c APIClient) DeleteDeployment(id string) error {
 }
 
 func (c APIClient) doRequest(method string, urn string, o interface{}) error {
-	httpClient := getClient()
+	httpClient := c.getClient()
 
 	url := c.Endpoint + urn
 	req, err := http.NewRequest(method, url, strings.NewReader(""))
@@ -114,21 +115,18 @@ func (c APIClient) doRequest(method string, urn string, o interface{}) error {
 	return json.Unmarshal(body, &o)
 }
 
-// TODO You need to be verifying the server cert and not ignoring it, but this
-// keeps us working.
-func getClient() *http.Client {
-	//pool := x509.NewCertPool()
-	//pool.AppendCertsFromPEM(CertBytes)
-	nonverifyingSSL := &http.Transport{
+func (c *APIClient) getClient() *http.Client {
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM([]byte(c.PrivateKey))
+	verifyingTLS := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			//ServerName:         "X.X.X.X",
-			//RootCAs:            hardcodedPool,
-			InsecureSkipVerify: true,
+			RootCAs:            pool,
+			InsecureSkipVerify: false,
 		},
 	}
 
 	return &http.Client{
 		Timeout:   time.Duration(DefaultHTTPTimeout) * time.Second,
-		Transport: nonverifyingSSL,
+		Transport: verifyingTLS,
 	}
 }

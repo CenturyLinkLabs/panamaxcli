@@ -7,23 +7,23 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/adapter",
-			"Rev": "532648d4f1069856f90eb5d8f757425250ea5dd4"
+			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/agent",
-			"Rev": "532648d4f1069856f90eb5d8f757425250ea5dd4"
+			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/api",
-			"Rev": "532648d4f1069856f90eb5d8f757425250ea5dd4"
+			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/client",
-			"Rev": "532648d4f1069856f90eb5d8f757425250ea5dd4"
+			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/repo",
-			"Rev": "532648d4f1069856f90eb5d8f757425250ea5dd4"
+			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
