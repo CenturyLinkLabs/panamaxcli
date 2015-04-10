@@ -5,25 +5,35 @@ import (
 	"encoding/json"
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/adapter"
-	"github.com/CenturyLinkLabs/panamax-remote-agent-go/repo"
 )
 
+// DeploymentStore is an interface that can persist information for an agent
+// about deployments.
+type DeploymentStore interface {
+	FindByID(int) (Deployment, error)
+	All() ([]Deployment, error)
+	Save(*Deployment) error
+	Remove(int) error
+}
+
 type deploymentManager struct {
-	Repo   repo.Persister
-	Client adapter.Client
+	Store   DeploymentStore
+	Client  adapter.Client
+	version string
 }
 
 // MakeDeploymentManager returns a deploymentManager hydrated with a persister and adapter client.
-func MakeDeploymentManager(p repo.Persister, c adapter.Client) Manager {
+func MakeDeploymentManager(s DeploymentStore, c adapter.Client, v string) Manager {
 	return deploymentManager{
-		Repo:   p,
-		Client: c,
+		Store:   s,
+		Client:  c,
+		version: v,
 	}
 }
 
 // ListDeployments lists all available deployments in a repo.
 func (dm deploymentManager) ListDeployments() ([]DeploymentResponseLite, error) {
-	deps, err := dm.Repo.All()
+	deps, err := dm.Store.All()
 	if err != nil {
 		return []DeploymentResponseLite{}, err
 	}
@@ -76,7 +86,7 @@ func (dm deploymentManager) GetFullDeployment(qid int) (DeploymentResponseFull, 
 
 // GetDeployment returns a representation of the deployment with the given ID.
 func (dm deploymentManager) GetDeployment(qid int) (DeploymentResponseLite, error) {
-	dep, err := dm.Repo.FindByID(qid)
+	dep, err := dm.Store.FindByID(qid)
 	if err != nil {
 		return DeploymentResponseLite{}, err
 	}
@@ -92,9 +102,9 @@ func (dm deploymentManager) GetDeployment(qid int) (DeploymentResponseLite, erro
 }
 
 // DeleteDeployment deletes the deployment, with the given ID,
-// from both the repo and adapter.
+// from both the store and adapter.
 func (dm deploymentManager) DeleteDeployment(qID int) error {
-	dep, err := dm.Repo.FindByID(qID)
+	dep, err := dm.Store.FindByID(qID)
 
 	if err != nil {
 		return err
@@ -111,7 +121,7 @@ func (dm deploymentManager) DeleteDeployment(qID int) error {
 		}
 	}
 
-	if err := dm.Repo.Remove(qID); err != nil {
+	if err := dm.Store.Remove(qID); err != nil {
 		return err
 	}
 
@@ -134,12 +144,12 @@ func (dm deploymentManager) CreateDeployment(depB DeploymentBlueprint) (Deployme
 	}
 
 	tn := depB.Template.Name
-	dep, err := makeRepoDeployment(tn, mImgs, as)
+	dep, err := makeDeployment(tn, mImgs, as)
 	if err != nil {
 		return DeploymentResponseLite{}, err
 	}
 
-	if err := dm.Repo.Save(&dep); err != nil {
+	if err := dm.Store.Save(&dep); err != nil {
 		return DeploymentResponseLite{}, err
 	}
 
@@ -157,7 +167,7 @@ func (dm deploymentManager) CreateDeployment(depB DeploymentBlueprint) (Deployme
 // same template. The returned record will have a new ID.
 func (dm deploymentManager) ReDeploy(ID int) (DeploymentResponseLite, error) {
 
-	dep, err := dm.Repo.FindByID(ID)
+	dep, err := dm.Store.FindByID(ID)
 
 	var tpl Template
 	if err := json.Unmarshal([]byte(dep.Template), &tpl); err != nil {
@@ -181,26 +191,26 @@ func (dm deploymentManager) FetchMetadata() (Metadata, error) {
 	adapterMeta, _ := dm.Client.FetchMetadata()
 
 	md := Metadata{
-		Agent:   AgentMetadata{Version: "v1"}, // TODO pull this from a const or ENV or something
+		Agent:   AgentMetadata{Version: dm.version},
 		Adapter: adapterMeta,
 	}
 
 	return md, nil
 }
 
-func makeRepoDeployment(tn string, mImgs []Image, as []adapter.Service) (repo.Deployment, error) {
+func makeDeployment(tn string, mImgs []Image, as []adapter.Service) (Deployment, error) {
 	ts, err := stringifyTemplate(tn, mImgs)
 	if err != nil {
-		return repo.Deployment{}, err
+		return Deployment{}, err
 	}
 
 	ss, err := stringifyServiceIDs(as)
 
 	if err != nil {
-		return repo.Deployment{}, err
+		return Deployment{}, err
 	}
 
-	return repo.Deployment{
+	return Deployment{
 		Name:       tn,
 		Template:   ts,
 		ServiceIDs: ss,

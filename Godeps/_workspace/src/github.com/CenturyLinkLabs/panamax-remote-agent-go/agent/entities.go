@@ -5,6 +5,14 @@ import (
 	"strconv"
 )
 
+// Deployment represents a stored deployment.
+type Deployment struct {
+	ID         int
+	Name       string
+	ServiceIDs string
+	Template   string
+}
+
 // A Manager is responsible for coordinating deployment related use cases.
 type Manager interface {
 	ListDeployments() ([]DeploymentResponseLite, error)

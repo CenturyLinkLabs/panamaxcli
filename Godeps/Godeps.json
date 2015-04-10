@@ -7,28 +7,24 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/adapter",
-			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
+			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/agent",
-			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
+			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/api",
-			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
+			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/client",
-			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
-		},
-		{
-			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/repo",
-			"Rev": "6533d79432a29dd141090273b47f9a914542433c"
+			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.7.1",
-			"Rev": "3fc34d061b9c78a70db853c7cb6b0576b6d4f32d"
+			"Comment": "v0.7.2-2-ge00ed35",
+			"Rev": "e00ed35f54d331c88f1867a18a7bfc4e4e4685ac"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
@@ -42,10 +38,6 @@
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "8096f47503459bcc74d1f4c487b7e6e42e5746b5"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-sqlite3",
-			"Rev": "e28cd440fabdd39b9520344bc26829f61db40ece"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",

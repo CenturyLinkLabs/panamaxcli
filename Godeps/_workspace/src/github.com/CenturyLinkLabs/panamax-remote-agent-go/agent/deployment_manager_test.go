@@ -7,38 +7,37 @@ import (
 	"testing"
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/adapter"
-	"github.com/CenturyLinkLabs/panamax-remote-agent-go/repo"
 	"github.com/stretchr/testify/assert"
 )
 
-type fakeRepo struct {
-	callbackForAll    func() ([]repo.Deployment, error)
-	callbackForFind   func(int) (repo.Deployment, error)
-	callbackForSave   func(*repo.Deployment) error
+type fakeStore struct {
+	callbackForAll    func() ([]Deployment, error)
+	callbackForFind   func(int) (Deployment, error)
+	callbackForSave   func(*Deployment) error
 	callbackForRemove func(int) error
 }
 
-func (fr fakeRepo) FindByID(qID int) (repo.Deployment, error) {
-	if fr.callbackForFind != nil {
-		return fr.callbackForFind(qID)
+func (fs fakeStore) FindByID(qID int) (Deployment, error) {
+	if fs.callbackForFind != nil {
+		return fs.callbackForFind(qID)
 	}
-	return repo.Deployment{}, nil
+	return Deployment{}, nil
 }
-func (fr fakeRepo) All() ([]repo.Deployment, error) {
-	if fr.callbackForAll != nil {
-		return fr.callbackForAll()
+func (fs fakeStore) All() ([]Deployment, error) {
+	if fs.callbackForAll != nil {
+		return fs.callbackForAll()
 	}
-	return []repo.Deployment{}, nil
+	return []Deployment{}, nil
 }
-func (fr fakeRepo) Save(d *repo.Deployment) error {
-	if fr.callbackForSave != nil {
-		return fr.callbackForSave(d)
+func (fs fakeStore) Save(d *Deployment) error {
+	if fs.callbackForSave != nil {
+		return fs.callbackForSave(d)
 	}
 	return nil
 }
-func (fr fakeRepo) Remove(qID int) error {
-	if fr.callbackForRemove != nil {
-		return fr.callbackForRemove(qID)
+func (fs fakeStore) Remove(qID int) error {
+	if fs.callbackForRemove != nil {
+		return fs.callbackForRemove(qID)
 	}
 	return nil
 }
@@ -76,9 +75,9 @@ func (fc fakeAdapterClient) FetchMetadata() (interface{}, error) {
 }
 
 func TestSuccessfullListDeployments(t *testing.T) {
-	fr := fakeRepo{
-		callbackForAll: func() ([]repo.Deployment, error) {
-			drs := []repo.Deployment{
+	fs := fakeStore{
+		callbackForAll: func() ([]Deployment, error) {
+			drs := []Deployment{
 				{
 					ID:         1,
 					Name:       "booyah",
@@ -90,7 +89,7 @@ func TestSuccessfullListDeployments(t *testing.T) {
 		},
 	}
 	fc := fakeAdapterClient{}
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	drs, err := dm.ListDeployments()
 
@@ -108,13 +107,13 @@ func TestSuccessfullListDeployments(t *testing.T) {
 }
 
 func TestErroredListDeployments(t *testing.T) {
-	fr := fakeRepo{
-		callbackForAll: func() ([]repo.Deployment, error) {
-			return []repo.Deployment{}, errors.New("something failed")
+	fs := fakeStore{
+		callbackForAll: func() ([]Deployment, error) {
+			return []Deployment{}, errors.New("something failed")
 		},
 	}
 	fc := fakeAdapterClient{}
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	drs, err := dm.ListDeployments()
 
@@ -125,9 +124,9 @@ func TestErroredListDeployments(t *testing.T) {
 }
 
 func TestSuccessfulGetDeployment(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         7,
 				Name:       "booyah",
 				ServiceIDs: `["wp-pod", "db-pod"]`,
@@ -137,7 +136,7 @@ func TestSuccessfulGetDeployment(t *testing.T) {
 			return dr, nil
 		},
 	}
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	dr, err := dm.GetDeployment(7)
 
@@ -153,9 +152,9 @@ func TestSuccessfulGetDeployment(t *testing.T) {
 }
 
 func TestSuccessfulGetDeploymentWithNoTemplate(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         8,
 				Name:       "NO TEMPLATE",
 				ServiceIDs: "",
@@ -173,7 +172,7 @@ func TestSuccessfulGetDeploymentWithNoTemplate(t *testing.T) {
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	dr, err := dm.GetDeployment(7)
 
@@ -188,12 +187,12 @@ func TestSuccessfulGetDeploymentWithNoTemplate(t *testing.T) {
 }
 
 func TestErroredGetDeployment(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			return repo.Deployment{}, errors.New("something failed")
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			return Deployment{}, errors.New("something failed")
 		},
 	}
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	dr, err := dm.GetDeployment(7)
 
@@ -202,9 +201,9 @@ func TestErroredGetDeployment(t *testing.T) {
 }
 
 func TestSucessfulGetFullDeployment(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         7,
 				Name:       "Full booyah",
 				ServiceIDs: `["wp-pod"]`,
@@ -221,7 +220,7 @@ func TestSucessfulGetFullDeployment(t *testing.T) {
 			}
 		},
 	}
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	dr, err := dm.GetFullDeployment(7)
 
@@ -243,12 +242,12 @@ func TestSucessfulGetFullDeployment(t *testing.T) {
 }
 
 func TestErroredGetFullDeployment(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			return repo.Deployment{}, errors.New("something failed")
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			return Deployment{}, errors.New("something failed")
 		},
 	}
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	dr, err := dm.GetFullDeployment(7)
 
@@ -259,9 +258,9 @@ func TestErroredGetFullDeployment(t *testing.T) {
 func TestSuccessfulDeleteDeployment(t *testing.T) {
 	var rmIDs []int
 	var delIDs []string
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         7,
 				Name:       "To be deleted",
 				ServiceIDs: `["wp-pod"]`,
@@ -282,7 +281,7 @@ func TestSuccessfulDeleteDeployment(t *testing.T) {
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	err := dm.DeleteDeployment(7)
 
@@ -292,14 +291,14 @@ func TestSuccessfulDeleteDeployment(t *testing.T) {
 }
 
 func TestDeleteDeploymentWhenItDoesNotExit(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
 
-			return repo.Deployment{}, errors.New("deployment does not exist")
+			return Deployment{}, errors.New("deployment does not exist")
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	err := dm.DeleteDeployment(7)
 
@@ -312,9 +311,9 @@ func TestDeleteDeploymentWhenServiceDeletionFails(t *testing.T) {
 			return errors.New("failed to delete service")
 		},
 	}
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         7,
 				Name:       "To be deleted",
 				ServiceIDs: `["wp-pod"]`,
@@ -324,7 +323,7 @@ func TestDeleteDeploymentWhenServiceDeletionFails(t *testing.T) {
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fc)
+	dm := MakeDeploymentManager(fs, fc, "v1")
 
 	err := dm.DeleteDeployment(7)
 
@@ -332,9 +331,9 @@ func TestDeleteDeploymentWhenServiceDeletionFails(t *testing.T) {
 }
 
 func TestDeleteDeploymentRepoDeletionFails(t *testing.T) {
-	fr := fakeRepo{
-		callbackForFind: func(qID int) (repo.Deployment, error) {
-			dr := repo.Deployment{
+	fs := fakeStore{
+		callbackForFind: func(qID int) (Deployment, error) {
+			dr := Deployment{
 				ID:         7,
 				Name:       "To be deleted",
 				ServiceIDs: `["wp-pod"]`,
@@ -347,7 +346,7 @@ func TestDeleteDeploymentRepoDeletionFails(t *testing.T) {
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	err := dm.DeleteDeployment(7)
 
@@ -355,15 +354,15 @@ func TestDeleteDeploymentRepoDeletionFails(t *testing.T) {
 }
 
 func TestCreateDeploymentPersistedTheMergedTemplate(t *testing.T) {
-	var passedDep repo.Deployment
-	fr := fakeRepo{
-		callbackForSave: func(dep *repo.Deployment) error {
+	var passedDep Deployment
+	fs := fakeStore{
+		callbackForSave: func(dep *Deployment) error {
 			passedDep = *dep
 			return nil
 		},
 	}
 
-	dm := MakeDeploymentManager(fr, fakeAdapterClient{})
+	dm := MakeDeploymentManager(fs, fakeAdapterClient{}, "v1")
 
 	d := DeploymentBlueprint{
 		Template: Template{
