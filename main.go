@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/user"
+	"path/filepath"
 	"strings"
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/client"
@@ -144,12 +144,18 @@ func initializeApp(c *cli.Context) error {
 }
 
 func loadConfig(c *cli.Context) error {
-	user, err := user.Current()
-	if err != nil {
-		return err
+	// Stolen from: https://github.com/awslabs/aws-sdk-go/pull/136 Originally
+	// cleaner with os/user.Current(), but that failed under cross-compilation on
+	// non-linux platforms.
+	dir := os.Getenv("HOME") // *nix
+	if dir == "" {           // Windows
+		dir = os.Getenv("USERPROFILE")
 	}
-	dir := user.HomeDir
-	fileConfig := config.FileConfig{Path: dir + "/.agents"}
+	if dir == "" {
+		return errors.New("Couldn't determine your home directory!")
+	}
+
+	fileConfig := config.FileConfig{Path: filepath.Join(dir, ".agents")}
 	if err := fileConfig.Load(); err != nil {
 		log.Error(err)
 		return err
