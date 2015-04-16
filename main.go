@@ -134,15 +134,23 @@ func initializeApp(c *cli.Context) error {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	return loadConfig(c)
+	// Surprise! CLI wants an error from this method but, only uses it to abort
+	// execution, not for display anywhere.
+	if err := loadConfig(c); err != nil {
+		log.Error(err)
+	}
+
+	return nil
 }
 
 func loadConfig(c *cli.Context) error {
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	fileConfig := config.FileConfig{Path: dir + "/.agents"}
-	err := fileConfig.Load()
+	user, err := user.Current()
 	if err != nil {
+		return err
+	}
+	dir := user.HomeDir
+	fileConfig := config.FileConfig{Path: dir + "/.agents"}
+	if err := fileConfig.Load(); err != nil {
 		log.Error(err)
 		return err
 	}
