@@ -2,14 +2,9 @@ machine:
   services:
     - docker
 
-general:
-  artifacts:
-    - "panamaxcli" # the built binary
-
 dependencies:
   override:
     - docker pull centurylink/golang-tester:latest
-    - docker pull centurylink/golang-builder:latest
 
 test:
   override:
@@ -20,4 +15,9 @@ deployment:
     branch: master
     owner: CenturyLinkLabs
     commands:
-      - docker run -v $(pwd):/src centurylink/golang-builder:latest
+      - docker pull centurylink/golang-builder-cross:latest
+      - docker run -v $(pwd):/src centurylink/golang-builder-cross:latest
+      # Suffix all the built binaries with the short SHA.
+      - find ./ -type f -name "panamaxcli-*" -exec mv "{}" "{}-`echo $CIRCLE_SHA1 | cut -c1-6`" \;
+      # Save all the binaries as arttifacts
+      - mv ./panamaxcli-* $CIRCLE_ARTIFACTS
