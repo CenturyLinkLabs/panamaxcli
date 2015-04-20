@@ -32,10 +32,12 @@ func AddRemote(config config.Config, name string, path string) (Output, error) {
 
 	if len(config.Remotes()) == 1 {
 		config.SetActive(name)
-		s := fmt.Sprintf("Successfully added! '%s' is now your active remote.", name)
-		return PlainOutput{s}, nil
 	}
-	return PlainOutput{"Successfully added!"}, nil
+	s := "Successfully added!"
+	if config.Active() != nil {
+		s += fmt.Sprintf(" '%s' is your active remote.", config.Active().Name)
+	}
+	return PlainOutput{s}, nil
 }
 
 func RemoveRemote(config config.Config, name string) (Output, error) {
