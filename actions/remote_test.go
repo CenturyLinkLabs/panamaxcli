@@ -199,7 +199,7 @@ func TestSetActiveRemote(t *testing.T) {
 
 	assert.Equal(t, "Test", fc.ActivatedRemoteName)
 	assert.NoError(t, err)
-	assert.Equal(t, "Success!", output.ToPrettyOutput())
+	assert.Equal(t, "'Test' is now your active remote!", output.ToPrettyOutput())
 }
 
 func TestDescribeRemote(t *testing.T) {

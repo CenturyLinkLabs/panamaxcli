@@ -127,7 +127,7 @@ func SetActiveRemote(config config.Config, name string) (Output, error) {
 	if err := config.SetActive(name); err != nil {
 		return PlainOutput{}, err
 	}
-	return PlainOutput{"Success!"}, nil
+	return PlainOutput{fmt.Sprintf("'%s' is now your active remote!", name)}, nil
 }
 
 func GetRemoteToken(c config.Config, name string) (Output, error) {
