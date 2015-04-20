@@ -201,14 +201,22 @@ func actionRequiresActiveRemote(c *cli.Context) error {
 func remoteAddAction(c *cli.Context) {
 	if len(c.Args()) == 1 {
 		name := c.Args().First()
-		fmt.Println("Paste your token:")
-		reader := bufio.NewReader(os.Stdin)
-		token, err := reader.ReadBytes('\n')
-		if err != nil {
+		fmt.Println("Paste your token, then press return:")
+		var token string
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Split(bufio.ScanLines)
+		for scanner.Scan() {
+			text := scanner.Text()
+			token += text
+			if text == "" {
+				break
+			}
+		}
+		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
 		}
 
-		output, err := actions.AddRemote(Config, name, token)
+		output, err := actions.AddRemote(Config, name, []byte(token))
 		if err != nil {
 			log.Fatal(err)
 		}
