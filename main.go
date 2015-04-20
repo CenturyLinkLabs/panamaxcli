@@ -187,7 +187,9 @@ func actionRequiresArgument(args ...string) func(c *cli.Context) error {
 }
 
 func actionRequiresActiveRemote(c *cli.Context) error {
-	if Config.Active() == nil {
+	arg := c.Args().First()
+	isHelp := (arg == "help" || arg == "h")
+	if !isHelp && Config.Active() == nil {
 		message := "an active remote is required for this command"
 		log.Errorln(message)
 		return errors.New(message)
