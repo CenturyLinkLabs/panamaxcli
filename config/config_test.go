@@ -59,6 +59,7 @@ func TestErroredBadFormatLoad(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = c.Load()
+	assert.Contains(t, err.Error(), "Error parsing configuration file")
 	assert.Contains(t, err.Error(), "invalid character")
 }
 

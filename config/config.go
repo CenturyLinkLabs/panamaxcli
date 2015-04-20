@@ -113,7 +113,7 @@ func (c *FileConfig) Load() error {
 
 	d := json.NewDecoder(f)
 	if err := d.Decode(&c.store); err != nil {
-		return err
+		return fmt.Errorf("Error parsing configuration file: %s", err.Error())
 	}
 
 	return nil
