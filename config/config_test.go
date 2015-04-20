@@ -199,5 +199,12 @@ func TestErroredMissingTokenRemoteDecodeToken(t *testing.T) {
 func TestErroredBadTokenRemoteDecodeToken(t *testing.T) {
 	remote := Remote{Token: "BAD"}
 	err := remote.DecodeToken()
+	assert.Contains(t, err.Error(), "problem with your token")
 	assert.Contains(t, err.Error(), "illegal base64 data")
+}
+
+func TestErroredBadTokenRemoteIncompleteToken(t *testing.T) {
+	remote := Remote{Token: "YmFk"}
+	err := remote.DecodeToken()
+	assert.Contains(t, err.Error(), "problem with your token")
 }

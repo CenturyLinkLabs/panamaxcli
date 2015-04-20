@@ -137,10 +137,14 @@ func (r *Remote) DecodeToken() error {
 	}
 	bs, err := base64.StdEncoding.DecodeString(r.Token)
 	if err != nil {
-		return err
+		return fmt.Errorf("There was a problem with your token: %s", err.Error())
 	}
 
 	data := strings.Split(string(bs), "|")
+	if len(data) != 4 {
+		return errors.New("There was a problem with your token: incorrect number of fields")
+	}
+
 	r.Endpoint = data[0]
 	r.Username = data[1]
 	r.Password = data[2]
