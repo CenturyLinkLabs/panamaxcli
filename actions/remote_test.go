@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var TestTokenData = []byte("token data")
+
 type FakeConfig struct {
 	Agents              []config.Remote
 	SavedName           string
@@ -68,18 +70,9 @@ func (c *FakeConfig) Active() *config.Remote {
 	return c.ActiveRemote
 }
 
-func setupTokenFile(t *testing.T, data string) string {
-	tokenFile, err := ioutil.TempFile("", "pmx-test-token")
-	tokenFile.WriteString(data)
-	assert.NoError(t, err)
-	return tokenFile.Name()
-}
-
 func TestAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t, "token data")
-	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{}
-	output, err := AddRemote(&fc, "testname", tokenFilePath)
+	output, err := AddRemote(&fc, "testname", TestTokenData)
 
 	assert.Equal(t, "testname", fc.SavedName)
 	assert.Equal(t, "token data", fc.SavedToken)
@@ -89,10 +82,8 @@ func TestAddRemote(t *testing.T) {
 }
 
 func TestInactiveSecondAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t, "token data")
-	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{Agents: []config.Remote{{Name: "First"}}}
-	output, err := AddRemote(&fc, "Second", tokenFilePath)
+	output, err := AddRemote(&fc, "Second", TestTokenData)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "Successfully added!", output.ToPrettyOutput())
@@ -100,10 +91,8 @@ func TestInactiveSecondAddRemote(t *testing.T) {
 }
 
 func TestStripsWhitespaceAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t, "\n token data \n\n ")
-	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{}
-	_, err := AddRemote(&fc, "testname", tokenFilePath)
+	_, err := AddRemote(&fc, "testname", []byte("\n token data \n\n "))
 
 	assert.NoError(t, err)
 	assert.Equal(t, "token data", fc.SavedToken)
@@ -111,7 +100,7 @@ func TestStripsWhitespaceAddRemote(t *testing.T) {
 
 func TestErroredExistingNameAddRemote(t *testing.T) {
 	fc := FakeConfig{Agents: []config.Remote{{Name: "name"}}}
-	output, err := AddRemote(&fc, "name", "unused")
+	output, err := AddRemote(&fc, "name", TestTokenData)
 
 	assert.Empty(t, output.ToPrettyOutput())
 	assert.EqualError(t, err, "Name already exists")
@@ -119,29 +108,42 @@ func TestErroredExistingNameAddRemote(t *testing.T) {
 
 func TestErroredInvalidNameAddRemote(t *testing.T) {
 	fc := FakeConfig{}
-	output, err := AddRemote(&fc, "bad name", "unused")
+	output, err := AddRemote(&fc, "bad name", TestTokenData)
 	assert.Empty(t, output.ToPrettyOutput())
 	assert.EqualError(t, err, "Invalid name")
 
-	_, err = AddRemote(&fc, "bad!", "unused")
+	_, err = AddRemote(&fc, "bad!", TestTokenData)
 	assert.EqualError(t, err, "Invalid name")
 
-	_, err = AddRemote(&fc, "bad/", "unused")
+	_, err = AddRemote(&fc, "bad/", TestTokenData)
 	assert.EqualError(t, err, "Invalid name")
 }
 
-func TestErroredMissingFileAddRemote(t *testing.T) {
+func TestSuccessfulAddRemoteByPath(t *testing.T) {
+	tokenFile, err := ioutil.TempFile("", "pmx-test-token")
+	tokenFile.WriteString("token data")
+	assert.NoError(t, err)
+	defer os.Remove(tokenFile.Name())
 	fc := FakeConfig{}
-	output, err := AddRemote(&fc, "name", "bad/file")
+	output, err := AddRemoteByPath(&fc, "testname", tokenFile.Name())
+
+	assert.Equal(t, "testname", fc.SavedName)
+	assert.Equal(t, "token data", fc.SavedToken)
+	assert.NoError(t, err)
+	assert.Equal(t, "Successfully added! 'testname' is your active remote.", output.ToPrettyOutput())
+	assert.Equal(t, "testname", fc.ActivatedRemoteName)
+}
+
+func TestErroredMissingFileAddRemoteByPath(t *testing.T) {
+	fc := FakeConfig{}
+	output, err := AddRemoteByPath(&fc, "name", "bad/file")
 	assert.Empty(t, output.ToPrettyOutput())
 	assert.EqualError(t, err, "open bad/file: no such file or directory")
 }
 
 func TestErroredConfigSaveAddRemote(t *testing.T) {
-	tokenFilePath := setupTokenFile(t, "token data")
-	defer os.Remove(tokenFilePath)
 	fc := FakeConfig{ErrorForSave: errors.New("test error")}
-	output, err := AddRemote(&fc, "name", tokenFilePath)
+	output, err := AddRemote(&fc, "name", TestTokenData)
 
 	assert.Empty(t, output.ToPrettyOutput())
 	assert.EqualError(t, err, "test error")

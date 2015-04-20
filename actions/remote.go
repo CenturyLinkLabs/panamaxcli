@@ -14,19 +14,15 @@ import (
 
 var format = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
-func AddRemote(config config.Config, name string, path string) (Output, error) {
+func AddRemote(config config.Config, name string, token []byte) (Output, error) {
 	if !format.MatchString(name) {
 		return PlainOutput{}, errors.New("Invalid name")
 	}
 	if _, err := config.Get(name); err == nil {
 		return PlainOutput{}, errors.New("Name already exists")
 	}
-	token, err := ioutil.ReadFile(path)
-	if err != nil {
-		return PlainOutput{}, err
-	}
 	trimmedToken := strings.TrimSpace(string(token))
-	if err = config.Save(name, trimmedToken); err != nil {
+	if err := config.Save(name, trimmedToken); err != nil {
 		return PlainOutput{}, err
 	}
 
@@ -38,6 +34,15 @@ func AddRemote(config config.Config, name string, path string) (Output, error) {
 		s += fmt.Sprintf(" '%s' is your active remote.", config.Active().Name)
 	}
 	return PlainOutput{s}, nil
+}
+
+func AddRemoteByPath(config config.Config, name string, path string) (Output, error) {
+	token, err := ioutil.ReadFile(path)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	return AddRemote(config, name, token)
 }
 
 func RemoveRemote(config config.Config, name string) (Output, error) {

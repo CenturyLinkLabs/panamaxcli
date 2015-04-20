@@ -1,6 +1,7 @@
 package main // import "github.com/CenturyLinkLabs/panamaxcli"
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -44,8 +45,8 @@ func init() {
 				{
 					Name:        "add",
 					Usage:       "Add a remote",
-					Description: "Arguments are the name of the remote and the path to the token file.",
-					Before:      actionRequiresArgument("remote name", "file path"),
+					Description: "Arguments are the name of the remote and optionally the path to the token file. If omitted, you will be prompted for a token.",
+					Before:      actionRequiresArgument("remote name", "optional:token path"),
 					Action:      remoteAddAction,
 				},
 				{
@@ -167,7 +168,14 @@ func loadConfig(c *cli.Context) error {
 
 func actionRequiresArgument(args ...string) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		if len(c.Args()) != len(args) {
+		requiredCount := len(args)
+		for i, arg := range args {
+			if strings.HasPrefix(arg, "optional:") {
+				requiredCount = i
+			}
+		}
+
+		if len(c.Args()) < requiredCount || len(c.Args()) > len(args) {
 			s := strings.Join(args, ", ")
 			message := fmt.Sprintf("This command requires the following arguments: %s", s)
 			log.Errorln(message)
@@ -189,15 +197,32 @@ func actionRequiresActiveRemote(c *cli.Context) error {
 }
 
 func remoteAddAction(c *cli.Context) {
-	name := c.Args().First()
-	path := c.Args().Get(1)
+	if len(c.Args()) == 1 {
+		name := c.Args().First()
+		fmt.Println("Paste your token:")
+		reader := bufio.NewReader(os.Stdin)
+		token, err := reader.ReadBytes('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	output, err := actions.AddRemote(Config, name, path)
-	if err != nil {
-		log.Fatal(err)
+		output, err := actions.AddRemote(Config, name, token)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(output.ToPrettyOutput())
+	} else {
+		name := c.Args().First()
+		path := c.Args().Get(1)
+
+		output, err := actions.AddRemoteByPath(Config, name, path)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(output.ToPrettyOutput())
 	}
-
-	fmt.Println(output.ToPrettyOutput())
 }
 
 func removeRemoteAction(c *cli.Context) {
