@@ -166,26 +166,20 @@ func initializeApp(c *cli.Context) error {
 	// execution, not for display anywhere.
 	if err := loadConfig(c); err != nil {
 		log.Error(err)
+		return err
 	}
 
 	return nil
 }
 
 func loadConfig(c *cli.Context) error {
-	// Stolen from: https://github.com/awslabs/aws-sdk-go/pull/136 Originally
-	// cleaner with os/user.Current(), but that failed under cross-compilation on
-	// non-linux platforms.
-	dir := os.Getenv("HOME") // *nix
-	if dir == "" {           // Windows
-		dir = os.Getenv("USERPROFILE")
-	}
-	if dir == "" {
-		return errors.New("Couldn't determine your home directory!")
+	path, err := makeConfigPath()
+	if err != nil {
+		return err
 	}
 
-	fileConfig := config.FileConfig{Path: filepath.Join(dir, ".agents")}
+	fileConfig := config.FileConfig{Path: path}
 	if err := fileConfig.Load(); err != nil {
-		log.Error(err)
 		return err
 	}
 	Config = config.Config(&fileConfig)
@@ -387,4 +381,26 @@ func explicitOrActiveRemoteName(c *cli.Context) (string, error) {
 	}
 
 	return name, nil
+}
+
+func makeConfigPath() (string, error) {
+	// Stolen from: https://github.com/awslabs/aws-sdk-go/pull/136 Originally
+	// cleaner with os/user.Current(), but that failed under cross-compilation on
+	// non-linux platforms.
+	dir := os.Getenv("HOME") // *nix
+	if dir == "" {           // Windows
+		dir = os.Getenv("USERPROFILE")
+	}
+	if dir == "" {
+		return "", errors.New("Couldn't determine your home directory!")
+	}
+
+	panamaxDir := filepath.Join(dir, ".panamax")
+	if _, err := os.Stat(panamaxDir); os.IsNotExist(err) {
+		if err := os.Mkdir(panamaxDir, 0600); err != nil {
+			return "", err
+		}
+	}
+
+	return filepath.Join(panamaxDir, "remotes"), nil
 }
