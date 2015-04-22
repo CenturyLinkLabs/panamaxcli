@@ -45,11 +45,12 @@ func init() {
 					Action:  remoteListAction,
 				},
 				{
-					Name:    "describe",
-					Aliases: []string{"d"},
-					Usage:   "Describe a remote",
-					Before:  actionRequiresArgument("remote name"),
-					Action:  remoteDescribeAction,
+					Name:        "describe",
+					Aliases:     []string{"d"},
+					Usage:       "Describe a remote",
+					Description: "Arguments is optionally the name of the remote. When omitted, the active remote will be used.",
+					Before:      actionRequiresArgument("optional:remote name"),
+					Action:      remoteDescribeAction,
 				},
 				{
 					Name:        "add",
@@ -61,7 +62,7 @@ func init() {
 				{
 					Name:        "active",
 					Usage:       "Set the active remote",
-					Description: "Passing a remote name as an argument makes it the active remote.",
+					Description: "Argument is a remote name.",
 					Before:      actionRequiresArgument("remote name"),
 					Action:      setActiveRemoteAction,
 				},
@@ -76,7 +77,7 @@ func init() {
 					Name:        "token",
 					Usage:       "Show the remote's token",
 					Description: "Argument is a remote name.",
-					Before:      actionRequiresArgument("remote name"),
+					Before:      actionRequiresArgument("optional:remote name"),
 					Action:      getTokenAction,
 				},
 			},
@@ -277,7 +278,12 @@ func remoteListAction(c *cli.Context) {
 }
 
 func remoteDescribeAction(c *cli.Context) {
-	name := c.Args().First()
+	name, err := explicitOrActiveRemoteName(c)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
 	output, err := actions.DescribeRemote(Config, name)
 	if err != nil {
 		fatalError(err)
@@ -346,7 +352,12 @@ func deleteDeploymentAction(c *cli.Context) {
 }
 
 func getTokenAction(c *cli.Context) {
-	name := c.Args().First()
+	name, err := explicitOrActiveRemoteName(c)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
 	output, err := actions.GetRemoteToken(Config, name)
 	if err != nil {
 		fatalError(err)
@@ -363,4 +374,17 @@ func fatalError(err error) {
 	}
 
 	log.Fatal(err)
+}
+
+func explicitOrActiveRemoteName(c *cli.Context) (string, error) {
+	if c.Args().First() == "" && Config.Active() == nil {
+		return "", errors.New("you must provide a remote name or set an active remote!")
+	}
+
+	name := c.Args().First()
+	if name == "" {
+		name = Config.Active().Name
+	}
+
+	return name, nil
 }
