@@ -2,9 +2,12 @@ package actions
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strconv"
 
+	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
+	"github.com/ghodss/yaml"
 )
 
 func ListDeployments(remote config.Remote) (Output, error) {
@@ -57,6 +60,25 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 	co.AddOutput("", do)
 	co.AddOutput("Services", lo)
 	return &co, nil
+}
+
+func CreateDeployment(remote config.Remote, path string) (Output, error) {
+	templateBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	bp := agent.DeploymentBlueprint{}
+	if err := yaml.Unmarshal(templateBytes, &bp.Template); err != nil {
+		return PlainOutput{}, err
+	}
+
+	dr, err := DefaultAgentClientFactory.New(remote).CreateDeployment(bp)
+	if err != nil {
+		return PlainOutput{}, err
+	}
+
+	return PlainOutput{fmt.Sprintf("Template successfully deployed as '%d'", dr.ID)}, nil
 }
 
 func RedeployDeployment(remote config.Remote, id string) (Output, error) {

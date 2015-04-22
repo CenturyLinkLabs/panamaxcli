@@ -37,7 +37,7 @@ var routes = []route{
 		"createDeployment",
 		"POST",
 		deploymentsURN,
-		createDeployment,
+		CreateDeployment,
 	},
 	{
 		"deleteDeployment",

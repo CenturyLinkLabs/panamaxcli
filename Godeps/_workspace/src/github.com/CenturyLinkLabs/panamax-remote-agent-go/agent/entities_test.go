@@ -130,12 +130,13 @@ func TestFullImageProducesProperJSON(t *testing.T) {
 		"deployment":{"count":2},
 		"environment":[{"variable":"FOO","value":"bar"}],
 		"expose":[33,44],
-		"links":[{"alias":"b","name":"bla"}],
+		"links":[{"alias":"b","name":"bla","service":"bla"}],
 		"name":"foo",
-		"ports":[{"containerPort":23,"hostPort":22}],
+		"ports":[{"containerPort":23,"container_port":23,"hostPort":22,"host_port":22}],
 		"source":"bar/foo",
-		"volumes":[{"containerPath":"/var","hostPath":"/usr"}],
-		"volumesFrom":["/viz"]
+		"volumes":[{"containerPath":"/var","container_path":"/var","hostPath":"/usr","host_path":"/usr"}],
+		"volumesFrom":["/viz"],
+		"volumes_from":["/viz"]
 	}`)
 
 	bb := bytes.Buffer{}

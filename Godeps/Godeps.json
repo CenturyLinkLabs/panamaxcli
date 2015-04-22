@@ -1,25 +1,22 @@
 {
 	"ImportPath": "github.com/CenturyLinkLabs/panamaxcli",
 	"GoVersion": "go1.4.2",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/adapter",
-			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
+			"Rev": "b9accf2f192e9a83d3d27e3027d2457e738f1aeb"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/agent",
-			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
+			"Rev": "b9accf2f192e9a83d3d27e3027d2457e738f1aeb"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/api",
-			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
+			"Rev": "b9accf2f192e9a83d3d27e3027d2457e738f1aeb"
 		},
 		{
 			"ImportPath": "github.com/CenturyLinkLabs/panamax-remote-agent-go/client",
-			"Rev": "47ae966e16953a2ba5e75772492e941c98575385"
+			"Rev": "b9accf2f192e9a83d3d27e3027d2457e738f1aeb"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -32,6 +29,10 @@
 			"Rev": "9b2bd2b3489748d4d0a204fa4eb2ee9e89e0ebc6"
 		},
 		{
+			"ImportPath": "github.com/ghodss/yaml",
+			"Rev": "c3eb24aeea63668ebdac08d2e252f20df8b6b1ae"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 		},
@@ -42,6 +43,10 @@
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
 		}
 	]
 }

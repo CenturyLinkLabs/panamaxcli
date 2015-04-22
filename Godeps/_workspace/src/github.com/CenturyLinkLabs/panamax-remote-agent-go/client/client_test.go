@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -30,10 +31,11 @@ func teardown() {
 }
 
 type FakeManager struct {
-	Deployment   agent.DeploymentResponseFull
-	Deployments  []agent.DeploymentResponseLite
-	Redeployment agent.DeploymentResponseLite
-	Metadata     agent.Metadata
+	Deployment        agent.DeploymentResponseFull
+	Deployments       []agent.DeploymentResponseLite
+	Redeployment      agent.DeploymentResponseLite
+	Metadata          agent.Metadata
+	ResponseForCreate agent.DeploymentResponseLite
 }
 
 func (m *FakeManager) ListDeployments() ([]agent.DeploymentResponseLite, error) {
@@ -56,7 +58,7 @@ func (m *FakeManager) DeleteDeployment(id int) error {
 }
 
 func (m *FakeManager) CreateDeployment(b agent.DeploymentBlueprint) (agent.DeploymentResponseLite, error) {
-	return agent.DeploymentResponseLite{}, nil
+	return m.ResponseForCreate, nil
 }
 
 func (m *FakeManager) ReDeploy(id int) (agent.DeploymentResponseLite, error) {
@@ -126,6 +128,24 @@ func TestDescribeDeployment(t *testing.T) {
 	assert.True(t, handlerCalled)
 }
 
+func TestCreateDeployment(t *testing.T) {
+	setup()
+	defer teardown()
+	fakeManager := FakeManager{ResponseForCreate: agent.DeploymentResponseLite{ID: 123}}
+	handlerCalled := false
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		api.CreateDeployment(&fakeManager, w, r)
+	}
+	router.Methods("POST").Path(api.URLForDeployments()).Name("test").HandlerFunc(handler)
+
+	b := agent.DeploymentBlueprint{}
+	dr, err := client.CreateDeployment(b)
+	assert.NoError(t, err)
+	assert.Equal(t, 123, dr.ID)
+	assert.True(t, handlerCalled)
+}
+
 func TestRedeployDeployment(t *testing.T) {
 	setup()
 	defer teardown()
@@ -167,8 +187,12 @@ func Test_doRequest_ErroredUnexpectedStatus(t *testing.T) {
 		http.Error(w, "", 500)
 	}))
 
-	err := client.doRequest("GET", "/urn", &struct{}{})
+	err := client.doRequest("GET", "/urn", &struct{}{}, nil)
 	assert.EqualError(t, err, "unexpected status '500'")
+}
+
+type paramType struct {
+	Key string
 }
 
 func Test_doRequest_Success(t *testing.T) {
@@ -180,10 +204,15 @@ func Test_doRequest_Success(t *testing.T) {
 		assert.Equal(t, []string{"application/json"}, r.Header["Accept"])
 		assert.Equal(t, []string{"Basic " + encodedAuth}, r.Header["Authorization"])
 
+		var p paramType
+		d := json.NewDecoder(r.Body)
+		assert.NoError(t, d.Decode(&p))
+		assert.Equal(t, "Value", p.Key)
+
 		fmt.Fprintf(w, "{}")
 	}))
 
-	err := client.doRequest("GET", "/urn", &struct{}{})
+	err := client.doRequest("GET", "/urn", &struct{}{}, paramType{"Value"})
 	assert.NoError(t, err)
 }
 
@@ -194,6 +223,6 @@ func Test_doRequest_ErroredBadJSON(t *testing.T) {
 		fmt.Fprintf(w, "BAD JSON")
 	}))
 
-	err := client.doRequest("GET", "/urn", &struct{}{})
+	err := client.doRequest("GET", "/urn", &struct{}{}, nil)
 	assert.Contains(t, err.Error(), "invalid character")
 }

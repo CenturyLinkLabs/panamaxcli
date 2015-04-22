@@ -243,9 +243,9 @@ func TestCreateDeployment(t *testing.T) {
 			"command":"./run.sh",
 			"deployment":{"count":1},
 			"environment":[{"variable":"DB_PASSWORD","value":"pass@word02"},{"variable":"DB_NAME","value":"wordpress"}],
-			"links":[{"alias":"DB_1","name":"mysql"}],
+			"links":[{"alias":"DB_1","name":"mysql","service":"mysql"}],
 			"name":"wp",
-			"ports":[{"containerPort":80,"hostPort":8000}],
+			"ports":[{"containerPort":80,"container_port":80,"hostPort":8000,"host_port":8000}],
 			"source":"centurylink/wordpress:3.9.1"
 		},
 		{
@@ -253,10 +253,11 @@ func TestCreateDeployment(t *testing.T) {
 			"environment":[{"variable":"MYSQL_ROOT_PASSWORD","value":"pass@word02"}],
 			"expose":[1234,5678],
 			"name":"mysql",
-			"ports":[{"containerPort":3306,"hostPort":3306}],
+			"ports":[{"containerPort":3306,"container_port":3306,"hostPort":3306,"host_port":3306}],
 			"source":"centurylink/mysql:5.5",
-			"volumes":[{"containerPath":"/var/bar","hostPath":"foo/bar"}],
-			"volumesFrom":["wp"]
+			"volumes":[{"containerPath":"/var/bar","container_path":"/var/bar","hostPath":"foo/bar","host_path":"foo/bar"}],
+			"volumesFrom":["wp"],
+			"volumes_from":["wp"]
 		},
 		{
 			"name":"honeybadger",
@@ -358,8 +359,10 @@ func TestGetDeployment(t *testing.T) {
 }
 
 func TestReDeploy(t *testing.T) {
+	var pBody []byte
 	setup(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
+			pBody, _ = ioutil.ReadAll(r.Body)
 			drs := []adapter.Service{
 				{ID: "wp-pod"},
 				{ID: "mysql-pod"},
@@ -395,6 +398,37 @@ func TestReDeploy(t *testing.T) {
 
 	drsPostRedeploy := getAllDeployments()
 
+	b := []byte(`[
+		{
+			"command":"./run.sh",
+			"deployment":{"count":1},
+			"environment":[{"variable":"DB_PASSWORD","value":"pass@word02"},{"variable":"DB_NAME","value":"wordpress"}],
+			"links":[{"alias":"DB_1","name":"mysql","service":"mysql"}],
+			"name":"wp",
+			"ports":[{"containerPort":80,"container_port":80,"hostPort":8000,"host_port":8000}],
+			"source":"centurylink/wordpress:3.9.1"
+		},
+		{
+			"command":"./run.sh",
+			"environment":[{"variable":"MYSQL_ROOT_PASSWORD","value":"pass@word02"}],
+			"expose":[1234,5678],
+			"name":"mysql",
+			"ports":[{"containerPort":3306,"container_port":3306,"hostPort":3306,"host_port":3306}],
+			"source":"centurylink/mysql:5.5",
+			"volumes":[{"containerPath":"/var/bar","container_path":"/var/bar","hostPath":"foo/bar","host_path":"foo/bar"}],
+			"volumesFrom":["wp"],
+			"volumes_from":["wp"]
+		},
+		{
+			"name":"honeybadger",
+			"source":"honey/badger"
+		}
+	]`)
+
+	bb := bytes.Buffer{}
+	json.Compact(&bb, b)
+	expBody, _ := ioutil.ReadAll(&bb)
+
 	assert.Equal(t, 1, len(drsPreRedeploy))
 	assert.Equal(t, 1, len(drsPostRedeploy))
 	assert.Equal(t, 201, resp.StatusCode)
@@ -403,6 +437,7 @@ func TestReDeploy(t *testing.T) {
 	assert.NotEqual(t, ogID, dr.ID)
 	assert.Equal(t, true, dr.Redeployable)
 	assert.Equal(t, 3, len(dr.ServiceIDs))
+	assert.Equal(t, string(expBody), strings.TrimSpace(string(pBody)))
 }
 
 func TestDeleteDeployment(t *testing.T) {

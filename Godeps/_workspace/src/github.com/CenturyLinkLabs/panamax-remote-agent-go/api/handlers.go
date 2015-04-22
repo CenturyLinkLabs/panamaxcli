@@ -23,7 +23,10 @@ func ListDeployments(dm agent.Manager, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createDeployment(dm agent.Manager, w http.ResponseWriter, r *http.Request) {
+// CreateDeployment receives a JSON DeploymentBlueprint that will be handled by
+// the agent.Manager and responded to with a DeploymentResponseLite, if
+// appropriate.
+func CreateDeployment(dm agent.Manager, w http.ResponseWriter, r *http.Request) {
 	depB := &agent.DeploymentBlueprint{}
 	jd := json.NewDecoder(r.Body)
 	if err := jd.Decode(depB); err != nil {

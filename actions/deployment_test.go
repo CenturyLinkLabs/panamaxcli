@@ -2,12 +2,21 @@ package actions
 
 import (
 	"errors"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
 	"github.com/stretchr/testify/assert"
 )
+
+func setupTemplateFile(t *testing.T, contents string) string {
+	f, err := ioutil.TempFile("", "test-template.pmx")
+	f.WriteString(contents)
+	assert.NoError(t, err)
+	return f.Name()
+}
 
 func TestListDeployments(t *testing.T) {
 	setupFactory()
@@ -78,6 +87,54 @@ func TestDescribeDeployment(t *testing.T) {
 			assert.Equal(t, "running", lo.Rows[0]["State"])
 		}
 	}
+}
+
+func TestSuccessfulCreateDeployment(t *testing.T) {
+	setupFactory()
+	template := setupTemplateFile(t, wordpressTemplate)
+	defer os.Remove(template)
+	r := config.Remote{Name: "Test"}
+	fakeClient.DeployedDeployment = agent.DeploymentResponseLite{ID: 1}
+
+	o, err := CreateDeployment(r, template)
+	assert.NoError(t, err)
+	images := fakeClient.DeployedBlueprint.Template.Images
+	if assert.Len(t, images, 2) {
+		assert.Equal(t, "WP", images[0].Name)
+	}
+	assert.Equal(t, "Template successfully deployed as '1'", o.ToPrettyOutput())
+}
+
+func TestErroredMissingFileCreateDeployment(t *testing.T) {
+	setupFactory()
+	r := config.Remote{Name: "Test"}
+	o, err := CreateDeployment(r, "Bad Path")
+	assert.Contains(t, err.Error(), "no such file")
+	assert.Equal(t, PlainOutput{}, o)
+}
+
+func TestErroredBadYAMLCreateDeployment(t *testing.T) {
+	setupFactory()
+	template := setupTemplateFile(t, "!!!?!@@@BAD YAML@@@?!?!?")
+	defer os.Remove(template)
+	r := config.Remote{Name: "Test"}
+
+	o, err := CreateDeployment(r, template)
+	assert.Contains(t, err.Error(), "cannot unmarshal")
+	assert.Empty(t, fakeClient.DeployedBlueprint.Template.Images)
+	assert.Equal(t, PlainOutput{}, o)
+}
+
+func TestErroredClientCreateDeployment(t *testing.T) {
+	setupFactory()
+	fakeClient.ErrorForDeploymentCreate = errors.New("test error")
+	template := setupTemplateFile(t, wordpressTemplate)
+	defer os.Remove(template)
+	r := config.Remote{Name: "Test"}
+
+	o, err := CreateDeployment(r, template)
+	assert.EqualError(t, err, "test error")
+	assert.Equal(t, PlainOutput{}, o)
 }
 
 func TestDescribeDeploymentErrored(t *testing.T) {

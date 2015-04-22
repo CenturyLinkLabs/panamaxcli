@@ -93,6 +93,13 @@ func init() {
 					Action:      describeDeploymentAction,
 				},
 				{
+					Name:        "create",
+					Usage:       "Deploy a template",
+					Description: "Argument is the path to a Panamax template.",
+					Before:      actionRequiresArgument("template path"),
+					Action:      createDeploymentAction,
+				},
+				{
 					Name:        "redeploy",
 					Usage:       "Redeploy a deployment",
 					Description: "Argument is a deployment ID.",
@@ -276,6 +283,16 @@ func deploymentsListAction(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(output.ToPrettyOutput())
+}
+
+func createDeploymentAction(c *cli.Context) {
+	path := c.Args().First()
+	output, err := actions.CreateDeployment(*Config.Active(), path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println(output.ToPrettyOutput())
 }
 

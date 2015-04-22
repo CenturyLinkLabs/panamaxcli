@@ -126,6 +126,7 @@ func (img Image) MarshalJSON() ([]byte, error) {
 	}
 	if len(img.VolumesFrom) > 0 {
 		i["volumesFrom"] = img.VolumesFrom
+		i["volumes_from"] = img.VolumesFrom
 	}
 
 	return json.Marshal(i)
@@ -177,6 +178,7 @@ type Link struct {
 func (ln Link) MarshalJSON() ([]byte, error) {
 	i := map[string]interface{}{}
 	i["name"] = ln.Service
+	i["service"] = ln.Service
 	i["alias"] = ln.Alias
 	return json.Marshal(i)
 }
@@ -193,7 +195,9 @@ type Port struct {
 func (p Port) MarshalJSON() ([]byte, error) {
 	i := map[string]interface{}{}
 	i["hostPort"] = p.HostPort
+	i["host_port"] = p.HostPort
 	i["containerPort"] = p.ContainerPort
+	i["container_port"] = p.ContainerPort
 	return json.Marshal(i)
 }
 
@@ -215,7 +219,9 @@ type Volume struct {
 func (v Volume) MarshalJSON() ([]byte, error) {
 	i := map[string]interface{}{}
 	i["hostPath"] = v.HostPath
+	i["host_path"] = v.HostPath
 	i["containerPath"] = v.ContainerPath
+	i["container_path"] = v.ContainerPath
 	return json.Marshal(i)
 }
 
