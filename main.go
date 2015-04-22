@@ -2,8 +2,10 @@ package main // import "github.com/CenturyLinkLabs/panamaxcli"
 
 import (
 	"bufio"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,6 +21,13 @@ var (
 	Config   config.Config
 	Commands []cli.Command
 )
+
+const verificationWarning = `There was a problem verifying the Panamax Agent's SSL certificate! Please check the README if you are unsure why this might occur:
+
+https://github.com/CenturyLinkLabs/panamaxcli
+
+If you're positive that this is not an issue, you can rerun your command with the --insecure flag. The error is:
+%s`
 
 func init() {
 	client.DefaultHTTPTimeout = 10
@@ -131,6 +140,10 @@ func main() {
 			Name:  "debug",
 			Usage: "Enable verbose logging",
 		},
+		cli.BoolFlag{
+			Name:  "insecure",
+			Usage: "Skip SSL certificate verification",
+		},
 	}
 
 	app.Run(os.Args)
@@ -140,6 +153,12 @@ func initializeApp(c *cli.Context) error {
 	if c.GlobalBool("debug") {
 		// Remote Agent Client will write to logrus with helpful info!
 		log.SetLevel(log.DebugLevel)
+	}
+
+	if c.GlobalBool("insecure") {
+		// Remote Agent Client will not verify SSL cert. This is probably bad, but
+		// is useful for old certs that don't have the proper SAN IP settings.
+		client.SkipSSLVerify = true
 	}
 
 	// Surprise! CLI wants an error from this method but, only uses it to abort
@@ -220,12 +239,12 @@ func remoteAddAction(c *cli.Context) {
 			}
 		}
 		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
+			fatalError(err)
 		}
 
 		output, err := actions.AddRemote(Config, name, []byte(token))
 		if err != nil {
-			log.Fatal(err)
+			fatalError(err)
 		}
 
 		fmt.Println(output.ToPrettyOutput())
@@ -235,7 +254,7 @@ func remoteAddAction(c *cli.Context) {
 
 		output, err := actions.AddRemoteByPath(Config, name, path)
 		if err != nil {
-			log.Fatal(err)
+			fatalError(err)
 		}
 
 		fmt.Println(output.ToPrettyOutput())
@@ -246,7 +265,7 @@ func removeRemoteAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.RemoveRemote(Config, name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -261,7 +280,7 @@ func remoteDescribeAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.DescribeRemote(Config, name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -271,7 +290,7 @@ func setActiveRemoteAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.SetActiveRemote(Config, name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -281,7 +300,7 @@ func deploymentsListAction(c *cli.Context) {
 	output, err := actions.ListDeployments(*Config.Active())
 
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 	fmt.Println(output.ToPrettyOutput())
 }
@@ -290,7 +309,7 @@ func createDeploymentAction(c *cli.Context) {
 	path := c.Args().First()
 	output, err := actions.CreateDeployment(*Config.Active(), path)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -300,7 +319,7 @@ func describeDeploymentAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.DescribeDeployment(*Config.Active(), name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -310,7 +329,7 @@ func redeployDeploymentAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.RedeployDeployment(*Config.Active(), name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -320,7 +339,7 @@ func deleteDeploymentAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.DeleteDeployment(*Config.Active(), name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
@@ -330,8 +349,18 @@ func getTokenAction(c *cli.Context) {
 	name := c.Args().First()
 	output, err := actions.GetRemoteToken(Config, name)
 	if err != nil {
-		log.Fatal(err)
+		fatalError(err)
 	}
 
 	fmt.Println(output.ToPrettyOutput())
+}
+
+func fatalError(err error) {
+	if uErr, ok := err.(*url.Error); ok {
+		if hErr, ok := uErr.Err.(x509.HostnameError); ok {
+			err = fmt.Errorf(verificationWarning, hErr.Error())
+		}
+	}
+
+	log.Fatal(err)
 }
