@@ -116,6 +116,7 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 			"Adapter Type":       adapterMetadata.Type,
 			"Adapter Is Healthy": strconv.FormatBool(adapterMetadata.IsHealthy),
 		},
+		Order: []string{"Name", "Active", "Endpoint"},
 	}
 
 	lo, err := ListDeployments(r)

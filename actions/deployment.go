@@ -46,6 +46,7 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 			"ID":           strconv.Itoa(desc.ID),
 			"Redeployable": strconv.FormatBool(desc.Redeployable),
 		},
+		Order: []string{"ID", "Name", "Redeployed"},
 	}
 
 	lo := ListOutput{Labels: []string{"ID", "State"}}

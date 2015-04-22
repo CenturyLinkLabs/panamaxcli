@@ -55,6 +55,7 @@ func (o PlainOutput) ToPrettyOutput() string {
 
 type DetailOutput struct {
 	Details map[string]string
+	Order   []string
 }
 
 func (o DetailOutput) ToPrettyOutput() string {
@@ -63,11 +64,20 @@ func (o DetailOutput) ToPrettyOutput() string {
 
 	var keys []string
 	for k := range o.Details {
-		keys = append(keys, k)
+		shouldBeOrdered := true
+		for _, ok := range o.Order {
+			if k == ok {
+				shouldBeOrdered = false
+			}
+		}
+
+		if shouldBeOrdered {
+			keys = append(keys, k)
+		}
 	}
 	sort.Strings(keys)
 
-	for _, k := range keys {
+	for _, k := range append(o.Order, keys...) {
 		fmt.Fprintf(w, "%s\t%v\n", k, o.Details[k])
 	}
 

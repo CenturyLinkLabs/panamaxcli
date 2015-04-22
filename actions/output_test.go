@@ -34,6 +34,22 @@ func TestDetailOutput(t *testing.T) {
 	assert.False(t, strings.HasSuffix(s, "\n"))
 }
 
+func TestOrderedDetailOutput(t *testing.T) {
+	do := DetailOutput{
+		Details: map[string]string{
+			"Order Me Z": "v",
+			"Order Me X": "v",
+			"Alpha Z":    "v",
+			"Alpha X":    "v",
+		},
+		Order: []string{"Order Me Z", "Order Me X"},
+	}
+	s := do.ToPrettyOutput()
+
+	assert.Regexp(t, `Order Me Z\s+v\s+Order Me X\s+v\s+Alpha X\s+v\s+Alpha Z`, s)
+	assert.False(t, strings.HasSuffix(s, "\n"))
+}
+
 func TestCombinedOutput(t *testing.T) {
 	first := PlainOutput{"First"}
 	second := PlainOutput{"Second"}
