@@ -59,18 +59,23 @@ var routes = []route{
 	},
 }
 
+// URLForDeploymentID returns the URL for a specific deployment.
 func URLForDeploymentID(id string) string {
 	return strings.Replace(deploymentURN, "{id}", id, 1)
 }
 
+// RedeploymentURLForDeploymentID returns the URL to redeploy a specific
+// deployment.
 func RedeploymentURLForDeploymentID(id string) string {
 	return strings.Replace(reDeployURN, "{id}", id, 1)
 }
 
+// URLForDeployments returns the URL for all deployments.
 func URLForDeployments() string {
 	return deploymentsURN
 }
 
+// URLForMetadata returns the URL for metadata.
 func URLForMetadata() string {
 	return metadataURN
 }

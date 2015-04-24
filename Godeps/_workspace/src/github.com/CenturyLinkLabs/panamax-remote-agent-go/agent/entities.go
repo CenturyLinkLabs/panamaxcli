@@ -261,6 +261,7 @@ type Metadata struct {
 	Adapter interface{}   `json:"adapter"`
 }
 
+// AgentMetadata contains metadata specifically for the Agent.
 type AgentMetadata struct {
 	Version string `json:"version"`
 }

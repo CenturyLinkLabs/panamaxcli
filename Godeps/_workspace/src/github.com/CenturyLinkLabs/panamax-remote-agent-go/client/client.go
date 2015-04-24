@@ -17,12 +17,20 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-var DefaultHTTPTimeout = 10
+var (
+	// DefaultHTTPTimeout does exactly what you think it does.
+	DefaultHTTPTimeout = 10
+	// SkipSSLVerify allows SSL certificate verification to be skipped. This is
+	// frowned upon.
+	SkipSSLVerify = false
+)
 
 func init() {
 	log.SetLevel(log.ErrorLevel)
 }
 
+// A RequestError is a special type of error that will be returned for
+// unexpected HTTP responses.
 type RequestError struct {
 	StatusCode int
 	Body       string
@@ -32,6 +40,7 @@ func (e RequestError) Error() string {
 	return fmt.Sprintf("unexpected status '%d'", e.StatusCode)
 }
 
+// Client represents any struct that can communicate with the Agent.
 type Client interface {
 	ListDeployments() ([]agent.DeploymentResponseLite, error)
 	DescribeDeployment(id string) (agent.DeploymentResponseFull, error)
@@ -41,6 +50,8 @@ type Client interface {
 	GetMetadata() (agent.Metadata, error)
 }
 
+// APIClient implements the Client interface and communicates with the Agent
+// over HTTPS.
 type APIClient struct {
 	Endpoint   string
 	Username   string
@@ -48,36 +59,42 @@ type APIClient struct {
 	PrivateKey string
 }
 
+// ListDeployments fetches a list of deployments.
 func (c APIClient) ListDeployments() ([]agent.DeploymentResponseLite, error) {
 	var deployments []agent.DeploymentResponseLite
 	err := c.doRequest("GET", api.URLForDeployments(), &deployments, nil)
 	return deployments, err
 }
 
+// GetMetadata fetches metadata for the agent and adapter.
 func (c APIClient) GetMetadata() (agent.Metadata, error) {
 	var metadata agent.Metadata
 	err := c.doRequest("GET", api.URLForMetadata(), &metadata, nil)
 	return metadata, err
 }
 
+// DescribeDeployment fetches details for a specific deployment.
 func (c APIClient) DescribeDeployment(id string) (agent.DeploymentResponseFull, error) {
 	var resp agent.DeploymentResponseFull
 	err := c.doRequest("GET", api.URLForDeploymentID(id), &resp, nil)
 	return resp, err
 }
 
+// CreateDeployment creates a new deployment from a blueprint.
 func (c APIClient) CreateDeployment(b agent.DeploymentBlueprint) (agent.DeploymentResponseLite, error) {
 	var resp agent.DeploymentResponseLite
 	err := c.doRequest("POST", api.URLForDeployments(), &resp, b)
 	return resp, err
 }
 
+// RedeployDeployment redeploys a specific deployment.
 func (c APIClient) RedeployDeployment(id string) (agent.DeploymentResponseLite, error) {
 	var deployment agent.DeploymentResponseLite
 	err := c.doRequest("POST", api.RedeploymentURLForDeploymentID(id), &deployment, nil)
 	return deployment, err
 }
 
+// DeleteDeployment deletes a specific deployment.
 func (c APIClient) DeleteDeployment(id string) error {
 	return c.doRequest("DELETE", api.URLForDeploymentID(id), nil, nil)
 }
@@ -143,7 +160,7 @@ func (c *APIClient) getClient() *http.Client {
 	verifyingTLS := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			RootCAs:            pool,
-			InsecureSkipVerify: false,
+			InsecureSkipVerify: SkipSSLVerify,
 		},
 	}
 
