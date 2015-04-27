@@ -16,17 +16,20 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-var (
-	Config   config.Config
-	Commands []cli.Command
-)
-
-const verificationWarning = `There was a problem verifying the Panamax Agent's SSL certificate! Please check the README if you are unsure why this might occur:
+const (
+	Version             = "0.1.0"
+	verificationWarning = `There was a problem verifying the Panamax Agent's SSL certificate! Please check the README if you are unsure why this might occur:
 
 https://github.com/CenturyLinkLabs/panamaxcli
 
 If you're positive that this is not an issue, you can rerun your command with the --insecure flag. The error is:
 %s`
+)
+
+var (
+	Config   config.Config
+	Commands []cli.Command
+)
 
 func init() {
 	client.DefaultHTTPTimeout = 10
@@ -130,7 +133,7 @@ func init() {
 func main() {
 	app := cli.NewApp()
 	app.Name = "panamaxcli"
-	app.Version = "0.0.1"
+	app.Version = Version
 	app.Usage = "Panamax command-line utility."
 	app.Authors = []cli.Author{{"CenturyLink Labs", "clt-labs-futuretech@centurylink.com"}}
 	app.Commands = Commands
