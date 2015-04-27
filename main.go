@@ -1,7 +1,6 @@
 package main // import "github.com/CenturyLinkLabs/panamaxcli"
 
 import (
-	"bufio"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -55,8 +54,8 @@ func init() {
 				{
 					Name:        "add",
 					Usage:       "Add a remote",
-					Description: "Arguments are the name of the remote and optionally the path to the token file. If omitted, you will be prompted for a token.",
-					Before:      actionRequiresArgument("remote name", "optional:token path"),
+					Description: "Arguments are the name of the remote and the path to the token file.",
+					Before:      actionRequiresArgument("remote name", "token path"),
 					Action:      remoteAddAction,
 				},
 				{
@@ -220,40 +219,15 @@ func actionRequiresActiveRemote(c *cli.Context) error {
 }
 
 func remoteAddAction(c *cli.Context) {
-	if len(c.Args()) == 1 {
-		name := c.Args().First()
-		fmt.Println("Paste your token, then press return:")
-		var token string
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			text := scanner.Text()
-			token += text
-			if text == "" {
-				break
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			fatalError(err)
-		}
+	name := c.Args().First()
+	path := c.Args().Get(1)
 
-		output, err := actions.AddRemote(Config, name, []byte(token))
-		if err != nil {
-			fatalError(err)
-		}
-
-		fmt.Println(output.ToPrettyOutput())
-	} else {
-		name := c.Args().First()
-		path := c.Args().Get(1)
-
-		output, err := actions.AddRemoteByPath(Config, name, path)
-		if err != nil {
-			fatalError(err)
-		}
-
-		fmt.Println(output.ToPrettyOutput())
+	output, err := actions.AddRemoteByPath(Config, name, path)
+	if err != nil {
+		fatalError(err)
 	}
+
+	fmt.Println(output.ToPrettyOutput())
 }
 
 func removeRemoteAction(c *cli.Context) {
