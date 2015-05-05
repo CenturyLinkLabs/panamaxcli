@@ -19,6 +19,10 @@
 			"Rev": "0fbb8a3523373232c502095fb87892097d4bab1a"
 		},
 		{
+			"ImportPath": "github.com/CenturyLinkLabs/prettycli",
+			"Rev": "552338ea4abe1948523378f4fd36209298081e87"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.7.2-2-ge00ed35",
 			"Rev": "e00ed35f54d331c88f1867a18a7bfc4e4e4685ac"

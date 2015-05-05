@@ -8,6 +8,7 @@ import (
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
+	"github.com/CenturyLinkLabs/prettycli"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +30,7 @@ func TestListDeployments(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, fakeFactory.NewedRemotes, 1)
-	lo, ok := o.(*ListOutput)
+	lo, ok := o.(*prettycli.ListOutput)
 	if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
 		assert.Equal(t, "Test", lo.Rows[0]["Name"])
 		assert.Equal(t, "1", lo.Rows[0]["ID"])
@@ -44,7 +45,7 @@ func TestListDeploymentsErrored(t *testing.T) {
 	o, err := ListDeployments(r)
 
 	assert.EqualError(t, err, "Errored Deployment List")
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 }
 
 func TestDeploymentListEmpty(t *testing.T) {
@@ -53,7 +54,7 @@ func TestDeploymentListEmpty(t *testing.T) {
 	o, err := ListDeployments(r)
 
 	assert.NoError(t, err)
-	assert.Equal(t, PlainOutput{"No Deployments"}, o)
+	assert.Equal(t, prettycli.PlainOutput{"No Deployments"}, o)
 }
 
 func TestDescribeDeployment(t *testing.T) {
@@ -73,15 +74,15 @@ func TestDescribeDeployment(t *testing.T) {
 	assert.Equal(t, "1", fakeClient.DescribedDeployment)
 	assert.Len(t, fakeFactory.NewedRemotes, 1)
 
-	co, ok := o.(*CombinedOutput)
+	co, ok := o.(*prettycli.CombinedOutput)
 	if assert.True(t, ok) && assert.Len(t, co.Outputs, 2) {
-		do, ok := co.Outputs[0].Output.(DetailOutput)
+		do, ok := co.Outputs[0].Output.(prettycli.DetailOutput)
 		if assert.True(t, ok) {
 			assert.Equal(t, "Test", do.Details["Name"])
 			assert.Equal(t, "1", do.Details["ID"])
 		}
 
-		lo, ok := co.Outputs[1].Output.(ListOutput)
+		lo, ok := co.Outputs[1].Output.(prettycli.ListOutput)
 		if assert.True(t, ok) && assert.Len(t, lo.Rows, 1) {
 			assert.Equal(t, "wp", lo.Rows[0]["ID"])
 			assert.Equal(t, "running", lo.Rows[0]["State"])
@@ -110,7 +111,7 @@ func TestErroredMissingFileCreateDeployment(t *testing.T) {
 	r := config.Remote{Name: "Test"}
 	o, err := CreateDeployment(r, "Bad Path")
 	assert.Contains(t, err.Error(), "no such file")
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 }
 
 func TestErroredBadYAMLCreateDeployment(t *testing.T) {
@@ -122,7 +123,7 @@ func TestErroredBadYAMLCreateDeployment(t *testing.T) {
 	o, err := CreateDeployment(r, template)
 	assert.Contains(t, err.Error(), "cannot unmarshal")
 	assert.Empty(t, fakeClient.DeployedBlueprint.Template.Images)
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 }
 
 func TestErroredClientCreateDeployment(t *testing.T) {
@@ -134,7 +135,7 @@ func TestErroredClientCreateDeployment(t *testing.T) {
 
 	o, err := CreateDeployment(r, template)
 	assert.EqualError(t, err, "test error")
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 }
 
 func TestDescribeDeploymentErrored(t *testing.T) {
@@ -144,7 +145,7 @@ func TestDescribeDeploymentErrored(t *testing.T) {
 	o, err := DescribeDeployment(r, "Bad ID")
 
 	assert.EqualError(t, err, "Errored Deployment List")
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 }
 
 func TestRedeployDeployment(t *testing.T) {
@@ -171,7 +172,7 @@ func TestRedeployDeploymentErrored(t *testing.T) {
 	fakeClient.ErrorForDeploymentRedeploy = errors.New("Errored Redeploy")
 	o, err := RedeployDeployment(r, "Bad ID")
 
-	assert.Equal(t, PlainOutput{}, o)
+	assert.Equal(t, prettycli.PlainOutput{}, o)
 	assert.EqualError(t, err, "Errored Redeploy")
 }
 

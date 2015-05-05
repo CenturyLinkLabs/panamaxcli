@@ -7,21 +7,22 @@ import (
 
 	"github.com/CenturyLinkLabs/panamax-remote-agent-go/agent"
 	"github.com/CenturyLinkLabs/panamaxcli/config"
+	"github.com/CenturyLinkLabs/prettycli"
 	"github.com/ghodss/yaml"
 )
 
-func ListDeployments(remote config.Remote) (Output, error) {
+func ListDeployments(remote config.Remote) (prettycli.Output, error) {
 	c := DefaultAgentClientFactory.New(remote)
 	deps, err := c.ListDeployments()
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	if len(deps) == 0 {
-		return PlainOutput{"No Deployments"}, nil
+		return prettycli.PlainOutput{"No Deployments"}, nil
 	}
 
-	o := ListOutput{Labels: []string{"ID", "Name", "Services"}}
+	o := prettycli.ListOutput{Labels: []string{"ID", "Name", "Services"}}
 	for _, d := range deps {
 		o.AddRow(map[string]string{
 			"ID":       strconv.Itoa(d.ID),
@@ -33,14 +34,14 @@ func ListDeployments(remote config.Remote) (Output, error) {
 	return &o, nil
 }
 
-func DescribeDeployment(remote config.Remote, id string) (Output, error) {
+func DescribeDeployment(remote config.Remote, id string) (prettycli.Output, error) {
 	c := DefaultAgentClientFactory.New(remote)
 	desc, err := c.DescribeDeployment(id)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	do := DetailOutput{
+	do := prettycli.DetailOutput{
 		Details: map[string]string{
 			"Name":         desc.Name,
 			"ID":           strconv.Itoa(desc.ID),
@@ -49,7 +50,7 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 		Order: []string{"ID", "Name", "Redeployable"},
 	}
 
-	lo := ListOutput{Labels: []string{"ID", "State"}}
+	lo := prettycli.ListOutput{Labels: []string{"ID", "State"}}
 	for _, s := range desc.Status.Services {
 		lo.AddRow(map[string]string{
 			"ID":    s.ID,
@@ -57,48 +58,48 @@ func DescribeDeployment(remote config.Remote, id string) (Output, error) {
 		})
 	}
 
-	co := CombinedOutput{}
+	co := prettycli.CombinedOutput{}
 	co.AddOutput("", do)
 	co.AddOutput("Services", lo)
 	return &co, nil
 }
 
-func CreateDeployment(remote config.Remote, path string) (Output, error) {
+func CreateDeployment(remote config.Remote, path string) (prettycli.Output, error) {
 	templateBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	bp := agent.DeploymentBlueprint{}
 	if err := yaml.Unmarshal(templateBytes, &bp.Template); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	dr, err := DefaultAgentClientFactory.New(remote).CreateDeployment(bp)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	return PlainOutput{fmt.Sprintf("Template successfully deployed as '%d'", dr.ID)}, nil
+	return prettycli.PlainOutput{fmt.Sprintf("Template successfully deployed as '%d'", dr.ID)}, nil
 }
 
-func RedeployDeployment(remote config.Remote, id string) (Output, error) {
+func RedeployDeployment(remote config.Remote, id string) (prettycli.Output, error) {
 	c := DefaultAgentClientFactory.New(remote)
 	desc, err := c.RedeployDeployment(id)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	o := PlainOutput{fmt.Sprintf("Redeployed '%s' as Deployment ID %d", desc.Name, desc.ID)}
+	o := prettycli.PlainOutput{fmt.Sprintf("Redeployed '%s' as Deployment ID %d", desc.Name, desc.ID)}
 	return &o, nil
 }
 
-func DeleteDeployment(remote config.Remote, id string) (Output, error) {
+func DeleteDeployment(remote config.Remote, id string) (prettycli.Output, error) {
 	c := DefaultAgentClientFactory.New(remote)
 	if err := c.DeleteDeployment(id); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	o := PlainOutput{fmt.Sprintf("Successfully deleted deployment '%s'", id)}
+	o := prettycli.PlainOutput{fmt.Sprintf("Successfully deleted deployment '%s'", id)}
 	return &o, nil
 }

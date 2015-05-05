@@ -10,20 +10,21 @@ import (
 	"strings"
 
 	"github.com/CenturyLinkLabs/panamaxcli/config"
+	"github.com/CenturyLinkLabs/prettycli"
 )
 
 var format = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
-func AddRemote(config config.Config, name string, token []byte) (Output, error) {
+func AddRemote(config config.Config, name string, token []byte) (prettycli.Output, error) {
 	if !format.MatchString(name) {
-		return PlainOutput{}, errors.New("Invalid name")
+		return prettycli.PlainOutput{}, errors.New("Invalid name")
 	}
 	if _, err := config.Get(name); err == nil {
-		return PlainOutput{}, errors.New("Name already exists")
+		return prettycli.PlainOutput{}, errors.New("Name already exists")
 	}
 	trimmedToken := strings.TrimSpace(string(token))
 	if err := config.Save(name, trimmedToken); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	if len(config.Remotes()) == 1 {
@@ -33,33 +34,33 @@ func AddRemote(config config.Config, name string, token []byte) (Output, error) 
 	if config.Active() != nil {
 		s += fmt.Sprintf(" '%s' is your active remote.", config.Active().Name)
 	}
-	return PlainOutput{s}, nil
+	return prettycli.PlainOutput{s}, nil
 }
 
-func AddRemoteByPath(config config.Config, name string, path string) (Output, error) {
+func AddRemoteByPath(config config.Config, name string, path string) (prettycli.Output, error) {
 	token, err := ioutil.ReadFile(path)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	return AddRemote(config, name, token)
 }
 
-func RemoveRemote(config config.Config, name string) (Output, error) {
+func RemoveRemote(config config.Config, name string) (prettycli.Output, error) {
 	if err := config.Remove(name); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 	out := fmt.Sprintf("Successfully removed remote '%s' from configuration!", name)
-	return PlainOutput{out}, nil
+	return prettycli.PlainOutput{out}, nil
 }
 
-func ListRemotes(config config.Config) Output {
+func ListRemotes(config config.Config) prettycli.Output {
 	agents := config.Remotes()
 	if len(agents) == 0 {
-		return PlainOutput{"No remotes"}
+		return prettycli.PlainOutput{"No remotes"}
 	}
 
-	output := ListOutput{Labels: []string{"Active", "Name", "Endpoint"}}
+	output := prettycli.ListOutput{Labels: []string{"Active", "Name", "Endpoint"}}
 	for _, r := range config.Remotes() {
 		activeMarker := ""
 		if config.Active() != nil && *config.Active() == r {
@@ -75,10 +76,10 @@ func ListRemotes(config config.Config) Output {
 	return &output
 }
 
-func DescribeRemote(c config.Config, name string) (Output, error) {
+func DescribeRemote(c config.Config, name string) (prettycli.Output, error) {
 	r, err := c.Get(name)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	isActive := "false"
@@ -89,12 +90,12 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 	client := DefaultAgentClientFactory.New(r)
 	metadata, err := client.GetMetadata()
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	adapterMetadataBytes, err := json.Marshal(metadata.Adapter)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
 	adapterMetadata := struct {
@@ -103,10 +104,10 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 		IsHealthy bool
 	}{}
 	if err := json.Unmarshal(adapterMetadataBytes, &adapterMetadata); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	do := DetailOutput{
+	do := prettycli.DetailOutput{
 		Details: map[string]string{
 			"Name":               r.Name,
 			"Active":             isActive,
@@ -121,27 +122,27 @@ func DescribeRemote(c config.Config, name string) (Output, error) {
 
 	lo, err := ListDeployments(r)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
 
-	co := CombinedOutput{}
+	co := prettycli.CombinedOutput{}
 	co.AddOutput("", do)
 	co.AddOutput("Deployments", lo)
 
 	return &co, nil
 }
 
-func SetActiveRemote(config config.Config, name string) (Output, error) {
+func SetActiveRemote(config config.Config, name string) (prettycli.Output, error) {
 	if err := config.SetActive(name); err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
-	return PlainOutput{fmt.Sprintf("'%s' is now your active remote!", name)}, nil
+	return prettycli.PlainOutput{fmt.Sprintf("'%s' is now your active remote!", name)}, nil
 }
 
-func GetRemoteToken(c config.Config, name string) (Output, error) {
+func GetRemoteToken(c config.Config, name string) (prettycli.Output, error) {
 	r, err := c.Get(name)
 	if err != nil {
-		return PlainOutput{}, err
+		return prettycli.PlainOutput{}, err
 	}
-	return PlainOutput{r.Token}, nil
+	return prettycli.PlainOutput{r.Token}, nil
 }
