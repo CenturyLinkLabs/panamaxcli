@@ -6,6 +6,10 @@
 creation, redeployment, and deletion. It is installed alongside Panamax, but
 can be run separately without Panamax or its dependencies.
 
+## NOTE
+
+This repo is no longer being maintained. Users are welcome to fork it, but we make no warranty of its functionality.
+
 ## Installation
 
 The utility is installed when you follow [the normal Panamax installation
